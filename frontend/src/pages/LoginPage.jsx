@@ -2,13 +2,13 @@ import React, { useState, useEffect, useRef } from 'react'
 import { ArrowLeft, User, Shield, Briefcase, Users } from 'lucide-react'
 
 function LoginPage({ onNavigate }) {
-  const [email, setEmail] = useState('officer@vyaparsetu.com')
+  const [email, setEmail] = useState('procurement@vyaparsetu.com')
   const [password, setPassword] = useState('password123')
   const [selectedRole, setSelectedRole] = useState('officer') // default 'officer'
   const demoBoxRef = useRef(null)
 
   const demoCredentials = {
-    officer: { email: 'officer@vyaparsetu.com', password: 'password123' },
+    officer: { email: 'procurement@vyaparsetu.com', password: 'password123' },
     vendor: { email: 'vendor@vyaparsetu.com', password: 'password123' },
     manager: { email: 'manager@vyaparsetu.com', password: 'password123' },
     admin: { email: 'admin@vyaparsetu.com', password: 'password123' }
