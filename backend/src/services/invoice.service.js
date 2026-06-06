@@ -1,52 +1,51 @@
-const { Invoice, PurchaseOrder, Vendor, sequelize } = require('../models');
+const { Invoice, InvoiceItem, PurchaseOrder, Vendor, Rfq, Quotation, sequelize } = require('../models');
 const AppError = require('../utils/AppError');
 const pdfService = require('./pdf.service');
-const emailService = require('./email.service');
-const notificationService = require('./notification.service');
 const { logActivity } = require('../utils/logger');
-const axios = require('axios');
 
 class InvoiceService {
-  async generateInvoice(poId, taxRate = 0.0) {
+  async createManualInvoice(data, userId) {
     const t = await sequelize.transaction();
     try {
-      const po = await PurchaseOrder.findByPk(poId, { include: [{ model: Vendor, as: 'vendor' }] });
-      if (!po) throw new AppError('Purchase Order not found', 404);
+      const { items, ...invoiceData } = data;
 
-      const subtotal = po.totalAmount;
-      const taxAmount = subtotal * taxRate;
-      const grandTotal = parseFloat(subtotal) + parseFloat(taxAmount);
+      if (!items || items.length === 0) {
+        throw new AppError('At least one invoice item is required', 400);
+      }
+
+      // Server-side calculations
+      let subtotal = 0;
+      const itemRecords = items.map(item => {
+        const amount = parseFloat(item.quantity) * parseFloat(item.unitPrice);
+        subtotal += amount;
+        return {
+          itemDescription: item.itemDescription,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          amount: amount
+        };
+      });
+
+      const taxAmount = parseFloat(invoiceData.taxAmount || 0);
+      const additionalCharges = parseFloat(invoiceData.additionalCharges || 0);
+      const discountAmount = parseFloat(invoiceData.discountAmount || 0);
+      const grandTotal = (subtotal + taxAmount + additionalCharges) - discountAmount;
 
       const invoice = await Invoice.create({
-        invoiceNumber: 'INV-' + Date.now(),
-        poId: po.id,
-        vendorId: po.vendorId,
+        ...invoiceData,
         subtotal,
-        taxAmount,
         grandTotal,
-        dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days due date
+        createdBy: userId,
+        status: 'PENDING'
       }, { transaction: t });
+
+      // Create Items
+      const finalItems = itemRecords.map(item => ({ ...item, invoiceId: invoice.id }));
+      await InvoiceItem.bulkCreate(finalItems, { transaction: t });
 
       await t.commit();
 
-      // Async background tasks
-      (async () => {
-        try {
-          const pdfUrl = await pdfService.generateInvoice(invoice);
-          invoice.pdfUrl = pdfUrl;
-          await invoice.save();
-          
-          const response = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
-          const pdfBuffer = Buffer.from(response.data, 'utf-8');
-
-          await emailService.sendInvoiceEmail(po.vendor, invoice, pdfBuffer, null, null);
-          await notificationService.createNotification(po.generatedById, 'Invoice Generated', 'Invoice ' + invoice.invoiceNumber + ' created.', 'INVOICE_GENERATED', '/invoices/' + invoice.id);
-        } catch (err) {
-          console.error('Failed PDF/Email generation for Invoice:', err);
-        }
-      })();
-
-      await logActivity(po.vendorId, 'GENERATE_INVOICE', 'Invoice', invoice.id, 'Generated Invoice for PO', null);
+      await logActivity(userId, 'INVOICE_CREATED', 'Invoice', invoice.id, 'Manually created invoice ' + invoice.invoiceNumber);
 
       return this.getInvoiceById(invoice.id);
     } catch (error) {
@@ -58,12 +57,71 @@ class InvoiceService {
   async getInvoiceById(id) {
     const invoice = await Invoice.findByPk(id, {
       include: [
+        { model: InvoiceItem, as: 'items' },
         { model: PurchaseOrder, as: 'purchaseOrder' },
-        { model: Vendor, as: 'vendor' }
+        { model: Vendor, as: 'vendor' },
+        { model: Rfq, as: 'rfq' },
+        { model: Quotation, as: 'quotation' }
       ]
     });
     if (!invoice) throw new AppError('Invoice not found', 404);
     return invoice;
+  }
+
+  async updateInvoice(id, data, userId) {
+    const invoice = await this.getInvoiceById(id);
+    const t = await sequelize.transaction();
+    try {
+      const { items, ...invoiceData } = data;
+
+      if (items) {
+        // Recalculate if items provided
+        let subtotal = 0;
+        await InvoiceItem.destroy({ where: { invoiceId: id }, transaction: t });
+        
+        const finalItems = items.map(item => {
+          const amount = parseFloat(item.quantity) * parseFloat(item.unitPrice);
+          subtotal += amount;
+          return {
+            ...item,
+            amount,
+            invoiceId: id
+          };
+        });
+        await InvoiceItem.bulkCreate(finalItems, { transaction: t });
+        
+        invoiceData.subtotal = subtotal;
+        const tax = parseFloat(invoiceData.taxAmount || invoice.taxAmount);
+        const add = parseFloat(invoiceData.additionalCharges || invoice.additionalCharges);
+        const disc = parseFloat(invoiceData.discountAmount || invoice.discountAmount);
+        invoiceData.grandTotal = (subtotal + tax + add) - disc;
+      }
+
+      await invoice.update(invoiceData, { transaction: t });
+      await t.commit();
+
+      await logActivity(userId, 'INVOICE_UPDATED', 'Invoice', id, 'Updated invoice ' + invoice.invoiceNumber);
+      return this.getInvoiceById(id);
+    } catch (error) {
+      await t.rollback();
+      throw error;
+    }
+  }
+
+  async getAllInvoices(query) {
+    return await Invoice.findAll({
+      order: [['createdAt', 'DESC']],
+      include: [{ model: Vendor, as: 'vendor' }]
+    });
+  }
+
+  async generatePdf(id, userId) {
+    const invoice = await this.getInvoiceById(id);
+    const pdfUrl = await pdfService.generateInvoice(invoice);
+    await invoice.update({ pdfUrl });
+    
+    await logActivity(userId, 'INVOICE_PDF_GENERATED', 'Invoice', id, 'Generated PDF for invoice ' + invoice.invoiceNumber);
+    return pdfUrl;
   }
 }
 

@@ -8,7 +8,14 @@ const router = express.Router();
 
 router.use(protect);
 
-router.post('/', restrictTo('ADMIN', 'VENDOR'), invoiceValidator, validate, invoiceController.generateInvoice);
-router.get('/:id', invoiceController.getInvoiceById);
+router.route('/')
+  .get(invoiceController.getAllInvoices)
+  .post(restrictTo('ADMIN', 'MANAGER', 'PROCUREMENT_OFFICER'), invoiceValidator, validate, invoiceController.createInvoice);
+
+router.route('/:id')
+  .get(invoiceController.getInvoiceById)
+  .put(restrictTo('ADMIN', 'MANAGER', 'PROCUREMENT_OFFICER'), invoiceController.updateInvoice);
+
+router.post('/:id/generate-pdf', restrictTo('ADMIN', 'MANAGER', 'PROCUREMENT_OFFICER'), invoiceController.generatePdf);
 
 module.exports = router;
