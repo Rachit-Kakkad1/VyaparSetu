@@ -1205,11 +1205,11 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
                     </div>
 
                     {/* Right Route Map Panel */}
-                    <div style={{ flex: '3', minWidth: '400px', display: 'flex', flexDirection: 'column', gap: '15px', height: '500px', position: 'relative' }}>
+                    <div style={{ flex: '3', minWidth: '400px', height: '500px', position: 'relative' }}>
                       <MapContainer 
                         center={[20.5937, 78.9629]} 
                         zoom={5} 
-                        style={{ height: '100%', width: '100%', borderRadius: '16px', border: '1px solid var(--l-border)' }}
+                        style={{ height: '100%', width: '100%', borderRadius: '16px', border: '1px solid var(--l-border)', zIndex: 1 }}
                       >
                         <TileLayer
                           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
