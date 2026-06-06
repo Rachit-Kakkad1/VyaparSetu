@@ -76,16 +76,80 @@ function VendorDashboard({ darkMode, toggleDarkMode, onNavigate }) {
     localStorage.setItem('vyaparsetu_chats', JSON.stringify(chats))
   }, [chats])
 
-  // Active user / vendor profile (Defaulting to Acme Supplies)
-  const [vendorProfile, setVendorProfile] = useState({
-    companyName: 'Vendor A (Acme Supplies)',
-    contactPerson: 'Aditya Mehta',
-    email: 'vendor@vendorbridge.com',
-    phone: '+91 98765 00010',
-    address: 'Sector 4, Phase 2, Industrial Hub, New Delhi, 110020',
-    gstin: '07AAAAA1234A1Z0',
-    rating: 4.5
+  // Active user / vendor profile (loaded from localStorage or defaulting)
+  const [vendorProfile, setVendorProfile] = useState(() => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    return {
+      companyName: user.vendor?.companyName || 'Acme Supplies Ltd',
+      contactPerson: (user.firstName && user.lastName) ? `${user.firstName} ${user.lastName}` : 'Aditya Mehta',
+      email: user.email || 'vendor@vyaparsetu.com',
+      phone: user.vendor?.contactPhone || '+91 98765 00010',
+      address: user.vendor?.address || 'Sector 4, Phase 2, Industrial Hub, New Delhi, 110020',
+      gstin: user.vendor?.taxId || '07AAAAA1234A1Z0',
+      rating: user.vendor?.performanceScore || 4.8
+    }
   })
+
+  // Poll chats from localStorage every 2 seconds to make chat system live
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const stored = localStorage.getItem('vyaparsetu_chats')
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored)
+          setChats(parsed)
+        } catch (e) {}
+      }
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) return;
+      const headers = { Authorization: 'Bearer ' + token };
+      const baseUrl = `${(import.meta.env.VITE_API_URL || 'https://vyaparsetu-f6yi.onrender.com')}/api`;
+
+      const res = await fetch(baseUrl + '/rfqs', { headers });
+      const data = await res.json();
+
+      if (res.ok) {
+        const allRfqs = data.data.rfqs || data.data || [];
+        const mappedRfqs = allRfqs.map(r => ({
+          id: r.id,
+          rfqNumber: r.rfqNumber,
+          title: r.title,
+          category: r.category || 'Hardware',
+          status: r.status,
+          requirements: r.description || 'No description provided.',
+          budget: r.budget || 0,
+          deadlineDays: r.deadline ? Math.ceil((new Date(r.deadline) - new Date()) / (1000 * 60 * 60 * 24)) : 10,
+          bids: (r.quotations || []).map(q => ({
+            vendor: q.vendor?.companyName || 'Unknown Vendor',
+            vendorName: q.vendor?.companyName || 'Unknown Vendor',
+            price: parseFloat(q.totalAmount),
+            delivery: q.deliveryTimeDays + ' days',
+            rating: q.vendor?.performanceScore || 0,
+            terms: q.remarks,
+            status: q.status,
+            pdfName: 'Quotation.pdf'
+          })),
+          dateCreated: r.createdAt ? r.createdAt.split('T')[0] : '2026-06-05'
+        }));
+        setRfqs(mappedRfqs);
+      }
+    } catch (error) {
+      console.error('Error fetching vendor data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
   const [showProfileModal, setShowProfileModal] = useState(false)
 
   // Bidding Modal States
@@ -194,7 +258,7 @@ function VendorDashboard({ darkMode, toggleDarkMode, onNavigate }) {
       pdfUrl: finalPdfUrl
     }
 
-    // Update the RFQ bid list in the local state
+    // Update local storage / mock state
     setRfqs(prev => prev.map(rfq => {
       if (rfq.id === biddingRfq.id) {
         const existingBids = rfq.bids || []
@@ -205,6 +269,35 @@ function VendorDashboard({ darkMode, toggleDarkMode, onNavigate }) {
       }
       return rfq
     }))
+
+    // POST request to backend API to create a real quotation in the DB
+    const token = localStorage.getItem('accessToken');
+    const baseUrl = `${(import.meta.env.VITE_API_URL || 'https://vyaparsetu-f6yi.onrender.com')}/api`;
+    const payload = {
+      rfqId: biddingRfq.id,
+      deliveryTimeDays: parseInt(bidDelivery) || 7,
+      remarks: bidTerms || 'Standard commercial terms.',
+      items: (biddingRfq.items || []).map(item => ({
+        rfqItemId: item.id,
+        unitPrice: parseFloat(bidPrice) / (biddingRfq.items.length || 1),
+        quantity: item.quantity
+      }))
+    };
+
+    fetch(`${baseUrl}/quotations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(res => {
+      if (res.ok) {
+        fetchData();
+      }
+    })
+    .catch(err => console.error('Failed to submit quote to API:', err));
 
     // Automatically trigger/initialize a chat room between this Vendor and the Officer for this RFQ
     const chatKey = `${biddingRfq.id}-${vendorProfile.companyName}`

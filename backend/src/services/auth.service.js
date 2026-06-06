@@ -87,13 +87,25 @@ class AuthService {
     user.refreshToken = refreshToken;
     await user.save();
 
-    user.password = undefined; 
-    
+    let vendor = null;
+    if (user.role && user.role.name === 'VENDOR') {
+      const vu = await VendorUser.findOne({
+        where: { userId: user.id },
+        include: [{ model: Vendor, as: 'vendor' }]
+      });
+      if (vu) {
+        vendor = vu.vendor;
+      }
+    }
+
+    const userJson = user.toJSON();
+    userJson.vendor = vendor;
+
     // Trigger Login Alert
     emailService.sendLoginAlert(user, req).catch(err => console.error('Login alert failed', err));
     await logActivity(user.id, 'LOGIN', 'User', user.id, 'User logged in', req.ip);
     
-    return { user, accessToken, refreshToken };
+    return { user: userJson, accessToken, refreshToken };
   }
 
   async forgotPassword(email, req) {

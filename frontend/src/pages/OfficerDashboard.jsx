@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { 
   Plus, FileText, Send, Users, Activity, BarChart3, 
-  LayoutDashboard, LogOut, RefreshCw, X, CheckCircle 
+  LayoutDashboard, LogOut, RefreshCw, X, CheckCircle,
+  MessageSquare, Clock, Star
 } from 'lucide-react'
 
 function OfficerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
@@ -9,6 +10,9 @@ function OfficerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
   const [rfqs, setRfqs] = useState([])
   const [vendors, setVendors] = useState([])
   const [showAddRfqModal, setShowAddRfqModal] = useState(false)
+  const [selectedRfq, setSelectedRfq] = useState(null)
+  const [activeChat, setActiveChat] = useState(null)
+  const [chatInput, setChatInput] = useState('')
   
   // Form State
   const [newRfq, setNewRfq] = useState({
@@ -42,6 +46,82 @@ function OfficerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Chat / Discussion States and Synchronizations
+  const [chatHistories, setChatHistories] = useState(() => {
+    const stored = localStorage.getItem('vyaparsetu_chats')
+    if (stored) {
+      try { return JSON.parse(stored) } catch(e) {}
+    }
+    return {}
+  })
+
+  // Sync chats back to localStorage
+  useEffect(() => {
+    localStorage.setItem('vyaparsetu_chats', JSON.stringify(chatHistories))
+  }, [chatHistories])
+
+  // Poll chats from localStorage every 2 seconds to make chat system live
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const stored = localStorage.getItem('vyaparsetu_chats')
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored)
+          setChatHistories(parsed)
+          if (activeChat) {
+            const chatKey = `${activeChat.rfqId}-${activeChat.vendor}`
+            const latestMessages = parsed[chatKey] || []
+            if (JSON.stringify(latestMessages) !== JSON.stringify(activeChat.messages)) {
+              setActiveChat(prev => prev ? { ...prev, messages: latestMessages } : null)
+            }
+          }
+        } catch (e) {}
+      }
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [activeChat])
+
+  const openChatWithVendor = (rfqId, rfqTitle, vendorName) => {
+    const chatKey = `${rfqId}-${vendorName}`
+    const stored = localStorage.getItem('vyaparsetu_chats')
+    let currentChats = chatHistories
+    if (stored) {
+      try {
+        currentChats = JSON.parse(stored)
+        setChatHistories(currentChats)
+      } catch (e) {}
+    }
+    const messages = currentChats[chatKey] || []
+    setActiveChat({
+      rfqId,
+      title: rfqTitle,
+      vendor: vendorName,
+      messages
+    })
+  }
+
+  const handleSendChatMessage = (e) => {
+    e.preventDefault()
+    if (!chatInput.trim() || !activeChat) return
+
+    const newMessage = {
+      sender: 'officer',
+      text: chatInput,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }
+
+    const chatKey = `${activeChat.rfqId}-${activeChat.vendor}`
+    const updatedMessages = [...(chatHistories[chatKey] || []), newMessage]
+
+    setChatHistories(prev => ({
+      ...prev,
+      [chatKey]: updatedMessages
+    }))
+
+    setActiveChat(prev => prev ? { ...prev, messages: updatedMessages } : null)
+    setChatInput('')
+  }
 
   const handleCreateRfq = async (e) => {
     e.preventDefault();
@@ -152,7 +232,7 @@ function OfficerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
                         <div className="dashboard-table-container">
                             <table className="dashboard-table">
                                 <thead>
-                                    <tr><th>RFQ #</th><th>Title</th><th>Status</th><th>Deadline</th></tr>
+                                    <tr><th>RFQ #</th><th>Title</th><th>Status</th><th>Deadline</th><th>Actions</th></tr>
                                 </thead>
                                 <tbody>
                                     {rfqs.slice(0, 5).map(r => (
@@ -161,10 +241,15 @@ function OfficerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
                                             <td>{r.title}</td>
                                             <td><span className={`status-pill status-${r.status.toLowerCase()}`}>{r.status}</span></td>
                                             <td>{new Date(r.deadline).toLocaleDateString()}</td>
+                                            <td>
+                                                <button className="btn btn-secondary" onClick={() => setSelectedRfq(r)} style={{ padding: '4px 10px', fontSize: '0.8rem' }}>
+                                                    View Bids & Chats
+                                                </button>
+                                            </td>
                                         </tr>
                                     ))}
                                     {rfqs.length === 0 && (
-                                        <tr><td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>No RFQs found</td></tr>
+                                        <tr><td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>No RFQs found</td></tr>
                                     )}
                                 </tbody>
                             </table>
@@ -177,7 +262,7 @@ function OfficerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
                 <div className="dashboard-table-container">
                     <table className="dashboard-table">
                         <thead>
-                            <tr><th>RFQ #</th><th>Title</th><th>Status</th><th>Deadline</th></tr>
+                            <tr><th>RFQ #</th><th>Title</th><th>Status</th><th>Deadline</th><th>Actions</th></tr>
                         </thead>
                         <tbody>
                             {rfqs.map(r => (
@@ -186,6 +271,11 @@ function OfficerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
                                     <td>{r.title}</td>
                                     <td><span className={`status-pill status-${r.status.toLowerCase()}`}>{r.status}</span></td>
                                     <td>{new Date(r.deadline).toLocaleDateString()}</td>
+                                    <td>
+                                        <button className="btn btn-secondary" onClick={() => setSelectedRfq(r)} style={{ padding: '4px 10px', fontSize: '0.8rem' }}>
+                                            View Bids & Chats
+                                        </button>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -241,6 +331,219 @@ function OfficerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
                   </form>
               </div>
           </div>
+      )}
+
+      {selectedRfq && (
+          <div className="modal-overlay" onClick={() => setSelectedRfq(null)}>
+              <div className="modal-card" style={{ maxWidth: '800px', width: '90%' }} onClick={e => e.stopPropagation()}>
+                  <div className="modal-header">
+                      <div>
+                        <span className="count-indicator" style={{ fontSize: '0.75rem', background: 'var(--accent-color)', color: '#fff', padding: '2px 6px', borderRadius: '4px' }}>{selectedRfq.rfqNumber}</span>
+                        <h3 style={{ margin: '6px 0 0 0' }}>Bids submitted for {selectedRfq.title}</h3>
+                      </div>
+                      <button type="button" className="close-modal-btn" onClick={() => setSelectedRfq(null)}><X size={20}/></button>
+                  </div>
+                  <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                          <strong>RFQ Description:</strong> {selectedRfq.description || 'No description provided.'}
+                      </p>
+                      <h4 style={{ margin: '10px 0 0 0', textTransform: 'uppercase', fontSize: '0.85rem', letterSpacing: '0.5px', color: 'var(--text-secondary)' }}>Quotations Submitted by Vendor Partners</h4>
+                      
+                      {(selectedRfq.quotations || []).length === 0 ? (
+                          <div style={{ padding: '40px', textAlign: 'center', background: 'var(--bg-color)', borderRadius: '8px', border: '1px dashed var(--border-color)' }}>
+                              <p style={{ margin: 0, fontStyle: 'italic', color: 'var(--text-secondary)' }}>No vendor quotations submitted for this RFQ yet.</p>
+                          </div>
+                      ) : (
+                          <div className="dashboard-table-container" style={{ background: 'var(--card-bg)', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
+                              <table className="dashboard-table">
+                                  <thead>
+                                      <tr>
+                                          <th>Vendor</th>
+                                          <th>Price Quote</th>
+                                          <th>Delivery Timeline</th>
+                                          <th>Trust Rating</th>
+                                          <th style={{ textAlign: 'right' }}>Actions</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                      {(selectedRfq.quotations || []).map(q => (
+                                          <tr key={q.id}>
+                                              <td><strong>{q.vendor?.companyName || 'Unknown Vendor'}</strong></td>
+                                              <td><strong>₹{parseFloat(q.totalAmount).toLocaleString()}</strong></td>
+                                              <td>{q.deliveryTimeDays} days</td>
+                                              <td>
+                                                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                      <Star size={14} fill="#eab308" stroke="#eab308" />
+                                                      {q.vendor?.performanceScore || 0}/5
+                                                  </span>
+                                              </td>
+                                              <td>
+                                                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                                      <button
+                                                          className="btn btn-secondary"
+                                                          onClick={() => { openChatWithVendor(selectedRfq.id, selectedRfq.title, q.vendor?.companyName); }}
+                                                          style={{ border: '1px solid var(--accent-color)', color: 'var(--accent-color)', padding: '6px 12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '4px', background: 'transparent' }}
+                                                      >
+                                                          <MessageSquare size={13} /> Discussion
+                                                      </button>
+                                                  </div>
+                                              </td>
+                                          </tr>
+                                      ))}
+                                  </tbody>
+                              </table>
+                          </div>
+                      )}
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* FLOATING DISCUSSION PANEL DRAWER (RIGHT SIDE SLIDE-OVER) */}
+      {activeChat && (
+        <div
+          className="chat-overlay"
+          onClick={() => setActiveChat(null)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            zIndex: 1100,
+            display: 'flex',
+            justifyContent: 'flex-end',
+            animation: 'fadeIn 0.25s ease'
+          }}
+        >
+          <div
+            className="chat-drawer"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '450px',
+              maxWidth: '100%',
+              height: '100%',
+              backgroundColor: 'var(--card-bg)',
+              borderLeft: '1px solid var(--border-color)',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '-8px 0 32px rgba(0, 0, 0, 0.15)'
+            }}
+          >
+            {/* Header */}
+            <div style={{ padding: '20px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-color)' }}>
+              <div>
+                <span className="count-indicator" style={{ fontSize: '0.7rem', background: 'var(--accent-color)', color: '#fff', padding: '2px 6px', borderRadius: '4px' }}>Discussion Room</span>
+                <h3 style={{ margin: '4px 0 0 0', fontSize: '1.1rem' }}>{activeChat.vendor}</h3>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Ref: {activeChat.title}</span>
+              </div>
+              <button
+                onClick={() => setActiveChat(null)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Chat Messages */}
+            <div
+              style={{
+                flex: 1,
+                padding: '20px',
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '15px',
+                backgroundColor: 'var(--bg-color)'
+              }}
+            >
+              {activeChat.messages.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px 10px', color: 'var(--text-secondary)' }}>
+                  <MessageSquare size={30} style={{ marginBottom: '10px', opacity: 0.5 }} />
+                  <p style={{ margin: 0, fontSize: '0.85rem' }}>No discussion history found. Start the discussion below.</p>
+                </div>
+              ) : (
+                activeChat.messages.map((msg, i) => {
+                  const isOfficer = msg.sender === 'officer'
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        alignSelf: isOfficer ? 'flex-end' : 'flex-start',
+                        maxWidth: '80%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: isOfficer ? 'flex-end' : 'flex-start'
+                      }}
+                    >
+                      <div
+                        style={{
+                          padding: '10px 15px',
+                          borderRadius: '12px',
+                          borderTopRightRadius: isOfficer ? '2px' : '12px',
+                          borderTopLeftRadius: isOfficer ? '12px' : '2px',
+                          backgroundColor: isOfficer ? 'var(--accent-color)' : 'var(--card-bg)',
+                          color: isOfficer ? '#FFFBE9' : 'var(--text-primary)',
+                          border: isOfficer ? 'none' : '1px solid var(--border-color)',
+                          fontSize: '0.9rem',
+                          lineHeight: '1.4'
+                        }}
+                      >
+                        {msg.text}
+                      </div>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '4px', padding: '0 4px' }}>
+                        {msg.timestamp}
+                      </span>
+                    </div>
+                  )
+                })
+              )}
+            </div>
+
+            {/* Input Form */}
+            <form
+              onSubmit={handleSendChatMessage}
+              style={{
+                padding: '20px',
+                borderTop: '1px solid var(--border-color)',
+                display: 'flex',
+                gap: '10px',
+                backgroundColor: 'var(--card-bg)'
+              }}
+            >
+              <input
+                type="text"
+                placeholder="Type your discussion message..."
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                style={{
+                  flex: 1,
+                  padding: '12px 15px',
+                  borderRadius: '8px',
+                  border: '1px solid var(--border-color)',
+                  background: 'var(--bg-color)',
+                  color: 'var(--text-primary)',
+                  fontSize: '0.9rem',
+                  outline: 'none'
+                }}
+              />
+              <button
+                type="submit"
+                className="btn btn-primary"
+                style={{
+                  padding: '12px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <Send size={16} />
+              </button>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   )

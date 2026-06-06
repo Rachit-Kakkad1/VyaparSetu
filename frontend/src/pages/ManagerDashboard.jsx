@@ -216,7 +216,39 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
   const [publishedRfqs, setPublishedRfqs] = useState([])
 
   // Database 2: Discussion Histories keyed by 'rfqId-vendorName'
-  const [chatHistories, setChatHistories] = useState({})
+  const [chatHistories, setChatHistories] = useState(() => {
+    const stored = localStorage.getItem('vyaparsetu_chats')
+    if (stored) {
+      try { return JSON.parse(stored) } catch(e) {}
+    }
+    return {}
+  })
+
+  // Sync chats back to localStorage
+  useEffect(() => {
+    localStorage.setItem('vyaparsetu_chats', JSON.stringify(chatHistories))
+  }, [chatHistories])
+
+  // Poll chats from localStorage every 2 seconds to make chat system live
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const stored = localStorage.getItem('vyaparsetu_chats')
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored)
+          setChatHistories(parsed)
+          if (activeChat) {
+            const chatKey = `${activeChat.rfqId}-${activeChat.vendor}`
+            const latestMessages = parsed[chatKey] || []
+            if (JSON.stringify(latestMessages) !== JSON.stringify(activeChat.messages)) {
+              setActiveChat(prev => prev ? { ...prev, messages: latestMessages } : null)
+            }
+          }
+        } catch (e) {}
+      }
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [activeChat])
 
   // Database 3: Historical approvals
   const [decidedRequests, setDecidedRequests] = useState([])
@@ -247,6 +279,7 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
             bids: (r.quotations || []).map(q => ({
                 id: q.id,
                 quotationId: q.id,
+                vendor: q.vendor?.companyName || 'Unknown Vendor',
                 vendorName: q.vendor?.companyName || 'Unknown Vendor',
                 price: parseFloat(q.totalAmount),
                 delivery: q.deliveryTimeDays + ' days',
@@ -375,26 +408,6 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
     }))
 
     setChatInput('')
-
-    // Simulate automatic vendor reply in 1.5 seconds
-    setTimeout(() => {
-      const reply = {
-        sender: 'vendor',
-        text: `Acknowledged, Sarah. We will review this and respond with our revised quotation shortly.`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }
-      const withReply = [...updatedMessages, reply]
-      setChatHistories(prev => ({
-        ...prev,
-        [chatKey]: withReply
-      }))
-      setActiveChat(prev => {
-        if (prev && prev.rfqId === activeChat.rfqId && prev.vendor === activeChat.vendor) {
-          return { ...prev, messages: withReply }
-        }
-        return prev
-      })
-    }, 1500)
   }
 
   // AI Recommendation simulation on selected RFQ
