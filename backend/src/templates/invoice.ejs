@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <div style="font-family: Arial; max-width: 600px; border: 1px solid #28a745; padding: 20px;">
+        <h2 style="color: #28a745;">Invoice Generated: <%= invoiceNumber %></h2>
+        <p>Hello <%= vendorName %>,</p>
+        <p>Your invoice for PO <strong><%= poNumber %></strong> has been generated and processed in our system.</p>
+        <div style="background: #e9f7ef; padding: 15px; border-radius: 8px;">
+            <p><strong>Invoice Number:</strong> <%= invoiceNumber %></p>
+            <p><strong>Grand Total:</strong> <%= grandTotal %></p>
+            <p><strong>Due Date:</strong> <%= dueDate %></p>
+        </div>
+        <p>The digital invoice is attached for your records.</p>
+    </div>
+</body>
+</html>

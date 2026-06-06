@@ -1,9 +1,10 @@
 const jwt = require('jsonwebtoken');
-const { User, Role } = require('../models');
+const { User, Role, Vendor, VendorUser, sequelize } = require('../models');
 const AppError = require('../utils/AppError');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const emailService = require('./email.service');
+const { logActivity } = require('../utils/logger');
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -18,26 +19,55 @@ const signRefreshToken = (id) => {
 };
 
 class AuthService {
-  async register(data) {
-    const { firstName, lastName, email, password, roleName } = data;
+  async register(data, req) {
+    const { firstName, lastName, email, password, roleName, companyName } = data;
+    const t = await sequelize.transaction();
     
-    let role = await Role.findOne({ where: { name: roleName || 'VENDOR' } });
-    if (!role) {
-      role = await Role.create({ name: roleName || 'VENDOR' });
+    try {
+      let role = await Role.findOne({ where: { name: roleName || 'VENDOR' } });
+      if (!role) {
+        role = await Role.create({ name: roleName || 'VENDOR' }, { transaction: t });
+      }
+
+      const user = await User.create({
+        firstName,
+        lastName,
+        email,
+        password,
+        roleId: role.id
+      }, { transaction: t });
+
+      let vendor = null;
+      if (role.name === 'VENDOR') {
+        vendor = await Vendor.create({
+          companyName: companyName || firstName + "'s Company",
+          contactEmail: email,
+          status: 'PENDING'
+        }, { transaction: t });
+
+        await VendorUser.create({
+          vendorId: vendor.id,
+          userId: user.id
+        }, { transaction: t });
+      }
+
+      await t.commit();
+
+      // Trigger Welcome Email
+      if (role.name === 'VENDOR' && vendor) {
+        await emailService.sendWelcomeVendor(user, vendor, null, req.ip);
+      } else {
+        await emailService.sendWelcomeInternal(user, role.name, 'N/A', null, req.ip);
+      }
+
+      return user;
+    } catch (error) {
+      await t.rollback();
+      throw error;
     }
-
-    const user = await User.create({
-      firstName,
-      lastName,
-      email,
-      password,
-      roleId: role.id
-    });
-
-    return user;
   }
 
-  async login(email, password) {
+  async login(email, password, req) {
     const user = await User.scope('withPassword').findOne({ 
       where: { email },
       include: [{ model: Role, as: 'role' }]
@@ -57,39 +87,16 @@ class AuthService {
     user.refreshToken = refreshToken;
     await user.save();
 
-    user.password = undefined; // Remove from output
+    user.password = undefined; 
+    
+    // Trigger Login Alert
+    await emailService.sendLoginAlert(user, req);
+    await logActivity(user.id, 'LOGIN', 'User', user.id, 'User logged in', req.ip);
     
     return { user, accessToken, refreshToken };
   }
 
-  async refreshToken(token) {
-    if (!token) throw new AppError('Refresh token is required', 401);
-
-    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
-    const user = await User.findByPk(decoded.id);
-
-    if (!user || user.refreshToken !== token) {
-      throw new AppError('Invalid refresh token', 401);
-    }
-
-    const newAccessToken = signToken(user.id);
-    const newRefreshToken = signRefreshToken(user.id);
-
-    user.refreshToken = newRefreshToken;
-    await user.save();
-
-    return { accessToken: newAccessToken, refreshToken: newRefreshToken };
-  }
-
-  async logout(userId) {
-    const user = await User.findByPk(userId);
-    if (user) {
-      user.refreshToken = null;
-      await user.save();
-    }
-  }
-
-  async forgotPassword(email) {
+  async forgotPassword(email, req) {
     const user = await User.findOne({ where: { email } });
     if (!user) throw new AppError('No user found with that email address', 404);
 
@@ -97,11 +104,12 @@ class AuthService {
     const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
 
     user.resetToken = resetTokenHash;
-    user.resetTokenExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
+    user.resetTokenExpiry = Date.now() + 10 * 60 * 1000; // 10 mins
     await user.save({ validate: false });
 
     try {
-      await emailService.sendResetPasswordEmail(user.email, resetToken);
+      await emailService.sendResetPasswordEmail(user, resetToken, req.ip);
+      await logActivity(user.id, 'FORGOT_PASSWORD_REQUEST', 'User', user.id, 'Password reset email requested', req.ip);
     } catch (error) {
       user.resetToken = null;
       user.resetTokenExpiry = null;
@@ -112,7 +120,7 @@ class AuthService {
     return true;
   }
 
-  async resetPassword(token, newPassword) {
+  async resetPassword(token, newPassword, req) {
     const resetTokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
     const user = await User.findOne({
@@ -129,6 +137,8 @@ class AuthService {
     user.resetToken = null;
     user.resetTokenExpiry = null;
     await user.save();
+
+    await logActivity(user.id, 'PASSWORD_RESET_SUCCESS', 'User', user.id, 'Password updated via reset link', req.ip);
 
     return true;
   }

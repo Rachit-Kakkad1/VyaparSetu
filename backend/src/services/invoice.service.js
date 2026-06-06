@@ -4,6 +4,7 @@ const pdfService = require('./pdf.service');
 const emailService = require('./email.service');
 const notificationService = require('./notification.service');
 const { logActivity } = require('../utils/logger');
+const axios = require('axios');
 
 class InvoiceService {
   async generateInvoice(poId, taxRate = 0.0) {
@@ -17,7 +18,7 @@ class InvoiceService {
       const grandTotal = parseFloat(subtotal) + parseFloat(taxAmount);
 
       const invoice = await Invoice.create({
-        invoiceNumber: `INV-${Date.now()}`,
+        invoiceNumber: 'INV-' + Date.now(),
         poId: po.id,
         vendorId: po.vendorId,
         subtotal,
@@ -34,15 +35,18 @@ class InvoiceService {
           const pdfUrl = await pdfService.generateInvoice(invoice);
           invoice.pdfUrl = pdfUrl;
           await invoice.save();
-          // Typically Invoice goes to Procurement Officer/Admin, mock vendor email
-          await emailService.sendInvoiceEmail(po.vendor.contactEmail, invoice);
-          await notificationService.createNotification(po.generatedById, 'Invoice Generated', `Invoice ${invoice.invoiceNumber} created.`, 'INVOICE_GENERATED', `/invoices/${invoice.id}`);
+          
+          const response = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
+          const pdfBuffer = Buffer.from(response.data, 'utf-8');
+
+          await emailService.sendInvoiceEmail(po.vendor, invoice, pdfBuffer, null, null);
+          await notificationService.createNotification(po.generatedById, 'Invoice Generated', 'Invoice ' + invoice.invoiceNumber + ' created.', 'INVOICE_GENERATED', '/invoices/' + invoice.id);
         } catch (err) {
           console.error('Failed PDF/Email generation for Invoice:', err);
         }
       })();
 
-      await logActivity(po.vendorId, 'GENERATE_INVOICE', 'Invoice', invoice.id, 'Generated Invoice for PO');
+      await logActivity(po.vendorId, 'GENERATE_INVOICE', 'Invoice', invoice.id, 'Generated Invoice for PO', null);
 
       return this.getInvoiceById(invoice.id);
     } catch (error) {

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 20px auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
+        .header { background: #343a40; color: white; padding: 20px; text-align: center; }
+        .content { padding: 30px; }
+        .footer { background: #f8f9fa; padding: 15px; text-align: center; font-size: 12px; color: #666; }
+        .button { display: inline-block; padding: 12px 25px; background: #343a40; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 20px; }
+        .info-box { background: #e9ecef; border-radius: 5px; padding: 15px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>VyaparSetu ERP Internal</h1>
+        </div>
+        <div class="content">
+            <h2>Welcome, <%= name %>!</h2>
+            <p>Your internal account has been created successfully.</p>
+            <div class="info-box">
+                <p><strong>Assigned Role:</strong> <%= role %></p>
+                <p><strong>Temporary Password:</strong> <code><%= tempPassword %></code></p>
+            </div>
+            <p>Please login and change your password immediately for security reasons.</p>
+            <a href="<%= loginUrl %>" class="button">Access Admin Portal</a>
+        </div>
+        <div class="footer">
+            &copy; 2026 VyaparSetu Enterprise.
+        </div>
+    </div>
+</body>
+</html>

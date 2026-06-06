@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <div style="font-family: Arial; max-width: 600px; border: 1px solid #eee; padding: 20px;">
+        <h2 style="color: #0056b3;">New RFQ Opportunity: <%= rfqNumber %></h2>
+        <p>Hello Vendor,</p>
+        <p>You have been assigned to a new Request for Quotation (RFQ).</p>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Title:</strong></td><td><%= title %></td></tr>
+            <tr><td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>Deadline:</strong></td><td><%= deadline %></td></tr>
+        </table>
+        <p>Please submit your competitive quotation before the deadline to be considered.</p>
+        <a href="<%= loginUrl %>" style="background: #0056b3; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Submit Quotation</a>
+    </div>
+</body>
+</html>

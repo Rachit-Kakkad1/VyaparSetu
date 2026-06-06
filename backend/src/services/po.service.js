@@ -4,6 +4,7 @@ const pdfService = require('./pdf.service');
 const emailService = require('./email.service');
 const notificationService = require('./notification.service');
 const { logActivity } = require('../utils/logger');
+const axios = require('axios');
 
 class PurchaseOrderService {
   async generatePO(quotationId, userId) {
@@ -16,7 +17,7 @@ class PurchaseOrderService {
       }
 
       const po = await PurchaseOrder.create({
-        poNumber: `PO-${Date.now()}`,
+        poNumber: 'PO-' + Date.now(),
         quotationId: quotation.id,
         vendorId: quotation.vendorId,
         totalAmount: quotation.totalAmount,
@@ -32,8 +33,13 @@ class PurchaseOrderService {
           const pdfUrl = await pdfService.generatePO(po);
           po.pdfUrl = pdfUrl;
           await po.save();
-          await emailService.sendPOEmail(quotation.vendor.contactEmail, po);
-          await notificationService.createNotification(quotation.vendorId, 'PO Generated', `Purchase Order ${po.poNumber} generated.`, 'PO_ISSUED', `/pos/${po.id}`);
+          
+          // Download PDF to send as attachment
+          const response = await axios.get(pdfUrl, { responseType: 'arraybuffer' });
+          const pdfBuffer = Buffer.from(response.data, 'utf-8');
+
+          await emailService.sendPOEmail(quotation.vendor, po, pdfBuffer, userId, null);
+          await notificationService.createNotification(quotation.vendorId, 'PO Generated', 'Purchase Order ' + po.poNumber + ' generated.', 'PO_ISSUED', '/pos/' + po.id);
         } catch (err) {
           console.error('Failed PDF/Email generation for PO:', err);
         }

@@ -4,7 +4,7 @@ const ApiResponse = require('../utils/ApiResponse');
 class AuthController {
   async register(req, res, next) {
     try {
-      const user = await authService.register(req.body);
+      const user = await authService.register(req.body, req);
       ApiResponse.success(res, 'User registered successfully', { user }, 201);
     } catch (error) {
       next(error);
@@ -14,7 +14,7 @@ class AuthController {
   async login(req, res, next) {
     try {
       const { email, password } = req.body;
-      const data = await authService.login(email, password);
+      const data = await authService.login(email, password, req);
       
       res.cookie('jwt', data.accessToken, {
         expires: new Date(Date.now() + 1 * 60 * 60 * 1000), // 1h
@@ -63,7 +63,7 @@ class AuthController {
 
   async forgotPassword(req, res, next) {
     try {
-      await authService.forgotPassword(req.body.email);
+      await authService.forgotPassword(req.body.email, req);
       ApiResponse.success(res, 'Token sent to email');
     } catch (error) {
       next(error);
@@ -72,7 +72,7 @@ class AuthController {
 
   async resetPassword(req, res, next) {
     try {
-      await authService.resetPassword(req.body.token, req.body.newPassword);
+      await authService.resetPassword(req.body.token, req.body.newPassword, req);
       ApiResponse.success(res, 'Password reset successful');
     } catch (error) {
       next(error);
