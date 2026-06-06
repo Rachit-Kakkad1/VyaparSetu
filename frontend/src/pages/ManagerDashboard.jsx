@@ -3,9 +3,28 @@ import {
   CheckSquare, XSquare, TrendingUp, AlertTriangle,
   MessageSquare, LogOut, Check, X, Sparkles,
   RefreshCw, BarChart3, Star, Percent, Truck, Send,
-  Clock, MapPin, Navigation, ChevronRight, Download
+  Clock, MapPin, Navigation, ChevronRight, Download, FileText
 } from 'lucide-react'
 import '../styles/logistics.css'
+import InvoiceBuilder from './InvoiceBuilder'
+
+// Helper to convert base64 PDF Data URL to safe Blob Object URL for Chrome iframe compatibility
+const base64ToBlob = (base64, type = 'application/pdf') => {
+  try {
+    const parts = base64.split(';base64,');
+    const base64Data = parts[1] || parts[0];
+    const binStr = atob(base64Data);
+    const len = binStr.length;
+    const arr = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      arr[i] = binStr.charCodeAt(i);
+    }
+    return new Blob([arr], { type });
+  } catch (e) {
+    console.error('base64ToBlob error:', e);
+    return null;
+  }
+}
 
 function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
   const [activeTab, setActiveTab] = useState('overview') // 'overview' | 'vendor-quotations' | 'decided' | 'vendors' | 'shipments' | 'route-monitoring' | 'eta-intelligence' | 'shipment-notifications' | 'shipment-analytics'
@@ -276,6 +295,31 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
   // New States: Fullscreen RFQ list and Detailed Quotation Popup
   const [fullScreenRfq, setFullScreenRfq] = useState(null)
   const [detailedBid, setDetailedBid] = useState(null)
+  const [viewingPdfBid, setViewingPdfBid] = useState(null)
+  const [pdfBlobUrl, setPdfBlobUrl] = useState(null)
+
+  useEffect(() => {
+    if (!viewingPdfBid || !viewingPdfBid.pdfUrl) {
+      setPdfBlobUrl(null)
+      return
+    }
+
+    if (viewingPdfBid.pdfUrl.startsWith('data:application/pdf;base64,')) {
+      try {
+        const blob = base64ToBlob(viewingPdfBid.pdfUrl)
+        if (blob) {
+          const url = URL.createObjectURL(blob)
+          setPdfBlobUrl(url)
+          return () => {
+            URL.revokeObjectURL(url)
+          }
+        }
+      } catch (e) {
+        console.error('Failed to create object URL from base64 PDF:', e)
+      }
+    }
+    setPdfBlobUrl(viewingPdfBid.pdfUrl)
+  }, [viewingPdfBid])
 
   // Active Discussion Session state
   const [activeChat, setActiveChat] = useState(null) // { rfqId, title, vendor, messages: [...] }
@@ -307,27 +351,40 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
   ])
 
   // Mock Database 1: Published RFQs with detailed warranty/terms
-  const [publishedRfqs, setPublishedRfqs] = useState([
-    {
-      id: 'REQ-2026-101',
-      title: 'Procurement of 50 Laptops',
-      status: 'Published to Vendors',
-      bids: [
-        { vendor: 'Vendor A (Acme Supplies)', price: 2400000, delivery: '7 days', rating: 4.5, terms: 'Includes 3 years onsite hardware replacement, express setup, and dedicated technical helpdesk.', status: 'Pending Review' },
-        { vendor: 'Vendor B (Global Parts)', price: 2350000, delivery: '10 days', rating: 4.8, terms: 'Includes 1 year standard warranty, spare battery pack, and bulk volume discounts on next order.', status: 'Pending Review' },
-        { vendor: 'Vendor C (SteelCorp)', price: 2600000, delivery: '5 days', rating: 4.2, terms: 'Includes 5 years manufacturer parts warranty and free door-to-door shipping.', status: 'Pending Review' }
-      ]
-    },
-    {
-      id: 'REQ-2026-102',
-      title: 'Procurement of 50 Mobiles',
-      status: 'Published to Vendors',
-      bids: [
-        { vendor: 'Vendor A (Acme Supplies)', price: 1000000, delivery: '7 days', rating: 4.5, terms: 'Includes 2 years insurance, phone screen guard, and protective rugged back covers.', status: 'Pending Review' },
-        { vendor: 'Vendor C (SteelCorp)', price: 1100000, delivery: '5 days', rating: 4.2, terms: 'Includes 1 year damage protection warranty and express air cargo courier delivery.', status: 'Pending Review' }
-      ]
+  const [publishedRfqs, setPublishedRfqs] = useState(() => {
+    const stored = localStorage.getItem('vyaparsetu_rfqs')
+    if (stored) {
+      try {
+        return JSON.parse(stored)
+      } catch (e) {}
     }
-  ])
+    return [
+      {
+        id: 'REQ-2026-101',
+        title: 'Procurement of 50 Laptops',
+        status: 'Published to Vendors',
+        bids: [
+          { vendor: 'Vendor A (Acme Supplies)', price: 2400000, delivery: '7 days', rating: 4.5, terms: 'Includes 3 years onsite hardware replacement, express setup, and dedicated technical helpdesk.', status: 'Pending Review', pdfName: 'QUOTE_LAPTOPS_ACME.pdf' },
+          { vendor: 'Vendor B (Global Parts)', price: 2350000, delivery: '10 days', rating: 4.8, terms: 'Includes 1 year standard warranty, spare battery pack, and bulk volume discounts on next order.', status: 'Pending Review', pdfName: 'QUOTE_50LAPTOPS_GLOBAL.pdf' },
+          { vendor: 'Vendor C (SteelCorp)', price: 2600000, delivery: '5 days', rating: 4.2, terms: 'Includes 5 years manufacturer parts warranty and free door-to-door shipping.', status: 'Pending Review', pdfName: 'STEELCORP_QUOTE_50L.pdf' }
+        ]
+      },
+      {
+        id: 'REQ-2026-102',
+        title: 'Procurement of 50 Mobiles',
+        status: 'Published to Vendors',
+        bids: [
+          { vendor: 'Vendor A (Acme Supplies)', price: 1000000, delivery: '7 days', rating: 4.5, terms: 'Includes 2 years insurance, phone screen guard, and protective rugged back covers.', status: 'Pending Review', pdfName: 'QUOTE_MOBILES_ACME.pdf' },
+          { vendor: 'Vendor C (SteelCorp)', price: 1100000, delivery: '5 days', rating: 4.2, terms: 'Includes 1 year damage protection warranty and express air cargo courier delivery.', status: 'Pending Review', pdfName: 'STEELCORP_QUOTE_50M.pdf' }
+        ]
+      }
+    ]
+  })
+
+  // Synchronize published RFQs to localStorage when changed
+  useEffect(() => {
+    localStorage.setItem('vyaparsetu_rfqs', JSON.stringify(publishedRfqs))
+  }, [publishedRfqs])
 
   // Mock Database 2: Discussion Histories keyed by 'rfqId-vendorName'
   const [chatHistories, setChatHistories] = useState({
@@ -604,6 +661,14 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
             <BarChart3 size={18} />
             <span>Analytics</span>
           </button>
+
+          <button
+            className={`nav-item ${activeTab === 'invoices' ? 'active' : ''}`}
+            onClick={() => { setActiveTab('invoices'); setFullScreenRfq(null); }}
+          >
+            <FileText size={18} />
+            <span>Invoices</span>
+          </button>
         </nav>
 
         <div className="sidebar-footer">
@@ -746,6 +811,7 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
                   {activeTab === 'eta-intelligence' && 'Arrival Intelligence Console'}
                   {activeTab === 'shipment-notifications' && 'Operational Alerts Journal'}
                   {activeTab === 'shipment-analytics' && 'Logistics & SLA Analytics'}
+                  {activeTab === 'invoices' && 'Manual Invoice Workspace'}
                 </h1>
                 <p className="header-subtitle">
                   {activeTab === 'overview' && 'Review statistics, active alerts, and notification histories.'}
@@ -757,6 +823,7 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
                   {activeTab === 'eta-intelligence' && 'Predictive arrival times, speed tracking, and warehouse offload prep.'}
                   {activeTab === 'shipment-notifications' && 'System logs and critical 10-minute warning updates.'}
                   {activeTab === 'shipment-analytics' && 'Detailed charts outlining route efficiency and vendor delivery times.'}
+                  {activeTab === 'invoices' && 'Verify procurement ledgers, generate standard/GST tax invoices, and export PDFs.'}
                 </p>
               </div>
 
@@ -807,7 +874,7 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
                   </section>
 
                   {/* Live Logistics Summary */}
-                  <div style={{ marginTop: '10px' }}>
+                  <div className="analytics-graph-card" style={{ marginTop: '20px', marginBottom: '24px', padding: '24px' }}>
                     <h3 style={{ margin: '0 0 15px 0', fontSize: '1.2rem', color: 'var(--text-color)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <Truck size={18} style={{ color: 'var(--accent-color)' }} />
                       Live Cargo & Arrival Intelligence Hub
@@ -1760,6 +1827,12 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
                 </div>
               )}
 
+              {activeTab === 'invoices' && (
+                <div className="tab-pane-fade">
+                  <InvoiceBuilder userRole="MANAGER" />
+                </div>
+              )}
+
             </div>
           </>
         )}
@@ -2080,13 +2153,26 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
                 </p>
               </div>
 
-              <div className="modal-action-buttons" style={{ marginTop: '10px' }}>
+              <div className="modal-action-buttons" style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
                 <button
                   className="btn btn-secondary"
                   onClick={() => setDetailedBid(null)}
-                  style={{ width: '100%', padding: '10px', borderRadius: '6px', cursor: 'pointer' }}
+                  style={{ flex: 1, padding: '10px', borderRadius: '6px', cursor: 'pointer' }}
                 >
                   Close Details
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setViewingPdfBid({
+                      ...detailedBid,
+                      pdfName: detailedBid.pdfName || `${detailedBid.vendor.replace(/\s+/g, '_')}_Quotation.pdf`
+                    });
+                    setDetailedBid(null);
+                  }}
+                  style={{ flex: 1, padding: '10px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                >
+                  <FileText size={14} /> View PDF Invoice
                 </button>
               </div>
             </div>
@@ -2273,19 +2359,19 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
       {/* DELIVERY CONFIRMATION MODAL */}
       {showDeliveryModal && deliveryShipmentId && (
         <div className="modal-overlay" onClick={() => { setShowDeliveryModal(false); setDeliveryShipmentId(null); }}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ background: 'var(--l-card)', border: '1px solid var(--l-border)' }}>
-            <div className="modal-header" style={{ borderBottom: '1px solid var(--l-border)' }}>
-              <h3 style={{ color: 'var(--l-success)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ background: 'var(--card-bg)', border: '1px solid var(--border-color)' }}>
+            <div className="modal-header" style={{ borderBottom: '1px solid var(--border-color)' }}>
+              <h3 style={{ color: 'var(--success-color, #10b981)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <CheckSquare size={20} />
                 Confirm Shipment Delivery
               </h3>
-              <button className="close-modal-btn" onClick={() => { setShowDeliveryModal(false); setDeliveryShipmentId(null); }} style={{ color: 'var(--l-text-mute)', border: 'none', background: 'transparent', cursor: 'pointer' }}>
+              <button className="close-modal-btn" onClick={() => { setShowDeliveryModal(false); setDeliveryShipmentId(null); }} style={{ color: 'var(--text-secondary)', border: 'none', background: 'transparent', cursor: 'pointer' }}>
                 <X size={20} />
               </button>
             </div>
 
             <form onSubmit={handleConfirmDelivery} className="modal-form">
-              <p style={{ fontSize: '0.9rem', color: 'var(--l-text-mute)', lineHeight: '1.5' }}>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
                 Confirming delivery certifies that the shipment cargo has arrived safely at the loading dock, and updates the inventory ledgers in VyaparSetu.
               </p>
 
@@ -2295,14 +2381,14 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
               </div>
 
               <div className="form-group">
-                <label htmlFor="deliveryNotes" style={{ color: '#fff', fontSize: '0.85rem', marginBottom: '5px', display: 'block' }}>Receiving Notes / Dock Allocation Details</label>
+                <label htmlFor="deliveryNotes" style={{ color: 'var(--text-primary)', fontSize: '0.85rem', marginBottom: '5px', display: 'block' }}>Receiving Notes / Dock Allocation Details</label>
                 <textarea
                   id="deliveryNotes"
                   rows="3"
                   placeholder="Allocate dock number, record batch variations..."
                   value={deliveryNotes}
                   onChange={(e) => setDeliveryNotes(e.target.value)}
-                  style={{ width: '100%', padding: '10px', border: '1px solid var(--l-border)', borderRadius: '6px', background: '#111827', color: '#fff', resize: 'vertical' }}
+                  style={{ width: '100%', padding: '10px', border: '1px solid var(--border-color)', borderRadius: '6px', background: 'var(--bg-color)', color: 'var(--text-primary)', resize: 'vertical' }}
                 ></textarea>
               </div>
 
@@ -2311,15 +2397,188 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
                   type="button"
                   className="btn btn-secondary cancel-btn"
                   onClick={() => { setShowDeliveryModal(false); setDeliveryShipmentId(null); }}
-                  style={{ border: '1px solid var(--l-border)', color: '#fff' }}
+                  style={{ border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
                 >
                   Cancel
                 </button>
-                <button type="submit" className="btn btn-primary submit-btn" style={{ background: 'var(--l-success)', border: 'none' }}>
+                <button type="submit" className="btn btn-primary submit-btn" style={{ background: 'var(--success-color, #10b981)', border: 'none' }}>
                   Confirm Delivery Complete
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* DETAILED PDF QUOTATION INVOICE MODAL VIEW */}
+      {viewingPdfBid && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.7)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px'
+        }}>
+          <div style={{
+            background: '#fff', color: '#111', width: '100%', maxWidth: '750px', borderRadius: '12px',
+            overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.3)'
+          }}>
+            
+            {/* Modal Title bar */}
+            <div style={{ padding: '16px 24px', background: '#2E2520', color: '#FFFBE9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontWeight: 'bold' }}>Quotation Document Preview: {viewingPdfBid.pdfName}</span>
+              <button 
+                onClick={() => setViewingPdfBid(null)}
+                style={{ background: 'transparent', border: 'none', color: '#FFFBE9', fontSize: '1.2rem', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Invoice Sheet */}
+            {pdfBlobUrl ? (
+              <div style={{ flex: '1', display: 'flex', flexDirection: 'column', height: '550px' }}>
+                <iframe
+                  src={pdfBlobUrl}
+                  title="PDF Viewer"
+                  style={{ border: 'none', width: '100%', height: '100%', minHeight: '500px' }}
+                />
+              </div>
+            ) : (
+              <div style={{ flex: '1', overflowY: 'auto', padding: '40px', fontFamily: '"Courier New", Courier, monospace', fontSize: '0.9rem', lineHeight: '1.4' }}>
+              
+              {/* Header Letterhead */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px double #333', paddingBottom: '20px' }}>
+                <div>
+                  <h2 style={{ margin: '0 0 6px 0', fontSize: '1.4rem', letterSpacing: '1px' }}>{viewingPdfBid.vendor.toUpperCase()}</h2>
+                  <p style={{ margin: '2px 0' }}>Industrial Area Hub, Bldg 4</p>
+                  <p style={{ margin: '2px 0' }}>New Delhi, DL, India</p>
+                  <p style={{ margin: '2px 0' }}>Tel: +91 91234 56789</p>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <h1 style={{ margin: '0 0 8px 0', fontSize: '1.8rem', color: '#888' }}>QUOTATION</h1>
+                  <p style={{ margin: '2px 0' }}><strong>DATE:</strong> {new Date().toISOString().split('T')[0]}</p>
+                  <p style={{ margin: '2px 0' }}><strong>REF RFQ:</strong> {viewingPdfBid.rfqId}</p>
+                </div>
+              </div>
+
+              {/* Bill To */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', margin: '30px 0', fontSize: '0.85rem' }}>
+                <div>
+                  <h4 style={{ margin: '0 0 6px 0' }}>PROSPECTIVE BUYER:</h4>
+                  <p style={{ margin: '2px 0' }}>VyaparSetu Procurement Desk</p>
+                  <p style={{ margin: '2px 0' }}>Officer in Charge: {managerProfile.name}</p>
+                  <p style={{ margin: '2px 0' }}>Email: {managerProfile.email}</p>
+                </div>
+                <div style={{ paddingLeft: '40px' }}>
+                  <h4 style={{ margin: '0 0 6px 0' }}>TERMS OF DELIVERY:</h4>
+                  <p style={{ margin: '2px 0' }}><strong>TIMELINE:</strong> {viewingPdfBid.delivery}</p>
+                  <p style={{ margin: '2px 0' }}><strong>VALID UNTIL:</strong> 30 Days from Date</p>
+                  <p style={{ margin: '2px 0' }}><strong>FOB POINT:</strong> Warehouse Destination</p>
+                </div>
+              </div>
+
+              {/* Items Table */}
+              <table style={{ width: '100%', borderCollapse: 'collapse', margin: '35px 0' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #000', textAlign: 'left', fontWeight: 'bold' }}>
+                    <th style={{ padding: '8px' }}>DESCRIPTION</th>
+                    <th style={{ padding: '8px', textAlign: 'right', width: '120px' }}>QTY</th>
+                    <th style={{ padding: '8px', textAlign: 'right', width: '160px' }}>UNIT PRICE</th>
+                    <th style={{ padding: '8px', textAlign: 'right', width: '160px' }}>TOTAL PRICE</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={{ borderBottom: '1px solid #eee' }}>
+                    <td style={{ padding: '12px 8px' }}>
+                      <strong>{viewingPdfBid.rfqTitle}</strong>
+                      <div style={{ fontSize: '0.75rem', color: '#555', marginTop: '4px' }}>
+                        Compliant with standard Technical requirements.
+                      </div>
+                    </td>
+                    <td style={{ padding: '12px 8px', textAlign: 'right' }}>1 Lot</td>
+                    <td style={{ padding: '12px 8px', textAlign: 'right' }}>₹{viewingPdfBid.price.toLocaleString()}</td>
+                    <td style={{ padding: '12px 8px', textAlign: 'right' }}>₹{viewingPdfBid.price.toLocaleString()}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              {/* Summary / Calculations */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '2px solid #000', paddingTop: '15px' }}>
+                <div style={{ width: '300px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>SUBTOTAL:</span>
+                    <span>₹{viewingPdfBid.price.toLocaleString()}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>TAXES (GST @ 0%):</span>
+                    <span>₹0</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #bbb', paddingTop: '6px', fontWeight: 'bold', fontSize: '1rem' }}>
+                    <span>NET TOTAL:</span>
+                    <span>₹{viewingPdfBid.price.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Warranty details */}
+              <div style={{ marginTop: '40px', padding: '16px', border: '1px solid #ddd', borderRadius: '6px', background: '#fafafa', fontSize: '0.8rem' }}>
+                <strong style={{ display: 'block', marginBottom: '6px' }}>WARRANTY & CONTRACT DETAILS:</strong>
+                <p style={{ margin: 0 }}>{viewingPdfBid.terms}</p>
+              </div>
+
+              {/* Signatures */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '60px', borderTop: '1px dotted #ccc', paddingTop: '30px', fontSize: '0.75rem' }}>
+                <div>
+                  <p>Authorized Signature: ______________________</p>
+                  <p style={{ opacity: 0.8 }}>Bidding Manager, {viewingPdfBid.vendor}</p>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <p style={{ color: 'green', fontWeight: 'bold' }}>✓ DIGITAL SECURITY KEY VERIFIED</p>
+                  <p style={{ opacity: 0.8 }}>VyaparSetu Trusted Supplier Program</p>
+                </div>
+              </div>
+
+            </div>
+            )}
+
+            {/* Footer buttons */}
+            <div style={{ padding: '16px 24px', background: '#f5f5f5', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <button 
+                onClick={() => {
+                  if (pdfBlobUrl) {
+                    const link = document.createElement('a')
+                    link.href = pdfBlobUrl
+                    link.download = viewingPdfBid.pdfName
+                    document.body.appendChild(link)
+                    link.click()
+                    document.body.removeChild(link)
+                  } else {
+                    alert('Generating PDF Document... Check your downloads folder.')
+                    const content = `VyaparSetu Bid Document\nRef: ${viewingPdfBid.rfqId}\nVendor: ${viewingPdfBid.vendor}\nPrice: ₹${viewingPdfBid.price}\nTerms: ${viewingPdfBid.terms}`
+                    const blob = new Blob([content], { type: 'text/plain' })
+                    const url = URL.createObjectURL(blob)
+                    const link = document.createElement('a')
+                    link.href = url
+                    link.download = viewingPdfBid.pdfName
+                    document.body.appendChild(link)
+                    link.click()
+                    document.body.removeChild(link)
+                  }
+                }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px',
+                  background: '#2E2520', color: '#FFFBE9', border: 'none', borderRadius: '6px',
+                  cursor: 'pointer', fontWeight: 'bold'
+                }}
+              >
+                <Download size={16} /> Download Copy
+              </button>
+              <button 
+                onClick={() => setViewingPdfBid(null)}
+                className="btn btn-secondary"
+                style={{ padding: '10px 18px' }}
+              >
+                Close Preview
+              </button>
+            </div>
           </div>
         </div>
       )}

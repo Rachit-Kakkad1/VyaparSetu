@@ -5,6 +5,7 @@ import {
   Database, Cpu, HardDrive, BarChart3, TrendingUp, DollarSign, 
   Package, X, Shield, RefreshCw, Settings 
 } from 'lucide-react'
+import InvoiceBuilder from './InvoiceBuilder'
 
 function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
   const [activeTab, setActiveTab] = useState('overview') // 'overview' | 'users' | 'vendors' | 'pipeline' | 'logs'
@@ -689,36 +690,7 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
 
               {/* Invoices Sub-tab contents */}
               {pipelineSubTab === 'invoices' && (
-                <div className="dashboard-table-container">
-                  <table className="dashboard-table">
-                    <thead>
-                      <tr>
-                        <th>Invoice ID</th>
-                        <th>PO Reference</th>
-                        <th>Supplier Partner</th>
-                        <th>Billing Value</th>
-                        <th>Filing Date</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {invoices.map(invoice => (
-                        <tr key={invoice.id}>
-                          <td><code>{invoice.id}</code></td>
-                          <td><code>{invoice.poRef}</code></td>
-                          <td><strong>{invoice.vendor}</strong></td>
-                          <td><strong>${invoice.amount.toLocaleString()}</strong></td>
-                          <td>{invoice.date}</td>
-                          <td>
-                            <span className={`invoice-status-badge status-${invoice.status.toLowerCase().replace(' ', '-')}`}>
-                              {invoice.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <InvoiceBuilder userRole="ADMIN" inline={true} />
               )}
             </div>
           )}

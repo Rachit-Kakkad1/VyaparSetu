@@ -4,10 +4,12 @@ import LoginPage from './pages/LoginPage.jsx'
 import SignUpPage from './pages/SignUpPage.jsx'
 import AdminDashboard from './pages/AdminDashboard.jsx'
 import ManagerDashboard from './pages/ManagerDashboard.jsx'
+import OfficerDashboard from './pages/OfficerDashboard.jsx'
+import VendorDashboard from './pages/VendorDashboard.jsx'
 
 function App() {
   const [darkMode, setDarkMode] = useState(true)
-  const [currentPage, setCurrentPage] = useState('landing') // 'landing' | 'login' | 'signup' | 'admin-dashboard' | 'manager-dashboard'
+  const [currentPage, setCurrentPage] = useState('landing') // 'landing' | 'login' | 'signup' | 'admin-dashboard' | 'manager-dashboard' | 'officer-dashboard' | 'vendor-dashboard'
 
   useEffect(() => {
     if (darkMode) {
@@ -29,18 +31,34 @@ function App() {
         return <SignUpPage onNavigate={setCurrentPage} />
       case 'admin-dashboard':
         return (
-          <AdminDashboard 
-            darkMode={darkMode} 
-            toggleDarkMode={toggleDarkMode} 
-            onNavigate={setCurrentPage} 
+          <AdminDashboard
+            darkMode={darkMode}
+            toggleDarkMode={toggleDarkMode}
+            onNavigate={setCurrentPage}
           />
         )
       case 'manager-dashboard':
         return (
-          <ManagerDashboard 
-            darkMode={darkMode} 
-            toggleDarkMode={toggleDarkMode} 
-            onNavigate={setCurrentPage} 
+          <ManagerDashboard
+            darkMode={darkMode}
+            toggleDarkMode={toggleDarkMode}
+            onNavigate={setCurrentPage}
+          />
+        )
+      case 'officer-dashboard':
+        return (
+          <OfficerDashboard
+            darkMode={darkMode}
+            toggleDarkMode={toggleDarkMode}
+            onNavigate={setCurrentPage}
+          />
+        )
+      case 'vendor-dashboard':
+        return (
+          <VendorDashboard
+            darkMode={darkMode}
+            toggleDarkMode={toggleDarkMode}
+            onNavigate={setCurrentPage}
           />
         )
       default:
