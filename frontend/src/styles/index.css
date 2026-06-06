@@ -1287,7 +1287,8 @@ body.dark .auth-visual-column {
 }
 
 .form-group input,
-.form-group select {
+.form-group select,
+.form-group textarea {
   padding: 12px 14px;
   border-radius: 8px;
   border: 1px solid var(--border-color);
@@ -1299,13 +1300,20 @@ body.dark .auth-visual-column {
   transition: all 0.2s ease;
 }
 
-.form-group input::placeholder {
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
   color: var(--text-secondary);
   opacity: 0.5;
 }
 
 .form-group input:focus,
-.form-group select:focus {
+.form-group select:focus,
+.form-group textarea:focus {
   border-color: var(--accent-color);
   box-shadow: 0 0 0 3px rgba(173, 139, 115, 0.15);
 }

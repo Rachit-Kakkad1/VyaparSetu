@@ -219,7 +219,7 @@ function OfficerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
               <div className="modal-card" style={{ maxWidth: '600px' }}>
                   <div className="modal-header">
                       <h3>Draft New RFQ</h3>
-                      <button onClick={() => setShowAddRfqModal(false)}><X size={20}/></button>
+                      <button type="button" className="close-modal-btn" onClick={() => setShowAddRfqModal(false)}><X size={20}/></button>
                   </div>
                   <form onSubmit={handleCreateRfq} className="modal-form">
                       <div className="form-group">
@@ -235,7 +235,7 @@ function OfficerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
                           <textarea value={newRfq.description} onChange={e => setNewRfq({...newRfq, description: e.target.value})} />
                       </div>
                       <div className="modal-action-buttons">
-                          <button type="button" className="btn btn-secondary" onClick={() => setShowAddRfqModal(false)}>Cancel</button>
+                          <button type="button" className="btn cancel-btn" onClick={() => setShowAddRfqModal(false)}>Cancel</button>
                           <button type="submit" className="btn btn-primary">Publish RFQ</button>
                       </div>
                   </form>

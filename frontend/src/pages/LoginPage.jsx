@@ -80,7 +80,7 @@ function LoginPage({ onNavigate }) {
         } else if (role === 'PROCUREMENT_OFFICER') {
           onNavigate('officer-dashboard')
         } else if (role === 'VENDOR') {
-          onNavigate('landing') // or vendor dashboard if exists
+          onNavigate('vendor-dashboard')
         } else {
           onNavigate('landing')
         }
