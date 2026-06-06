@@ -5,6 +5,7 @@ import {
   Database, Cpu, HardDrive, BarChart3, TrendingUp, DollarSign, 
   Package, X, Shield, RefreshCw, Settings 
 } from 'lucide-react'
+import InvoiceBuilder from './InvoiceBuilder'
 
 function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
   const [activeTab, setActiveTab] = useState('overview') 

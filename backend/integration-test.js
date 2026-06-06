@@ -45,7 +45,7 @@ async function runTest() {
       password: 'password123',
       roleName: 'VENDOR'
     });
-    
+
     const vendorLoginRes = await axios.post(BASE_URL + '/auth/login', {
       email: vendorUserEmail,
       password: 'password123'
@@ -65,11 +65,11 @@ async function runTest() {
 
     console.log('\n--- Phase 5: Approval ---');
     const approvalInitRes = await axios.post(BASE_URL + '/approvals', {
-       rfqId: rfqId,
-       quotationId: quoteId,
-       approvers: [
-         { approverId: userId, stepOrder: 1 }
-       ]
+      rfqId: rfqId,
+      quotationId: quoteId,
+      approvers: [
+        { approverId: userId, stepOrder: 1 }
+      ]
     }, authHeaders);
     const workflowId = approvalInitRes.data.data.workflow.id;
     const stepId = approvalInitRes.data.data.workflow.steps[0].id;

@@ -193,10 +193,10 @@ function LoginPage({ onNavigate }) {
               <span className="demo-badge">Demo Account Auto-Fill</span>
               <p className="demo-desc">Select a role below to inject mock credentials and preview their dashboard</p>
             </div>
-            
+
             <div className="demo-grid">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className={`demo-btn ${selectedRole === 'officer' ? 'active' : ''}`}
                 onClick={() => handleDemoSelect('officer')}
               >
@@ -207,8 +207,8 @@ function LoginPage({ onNavigate }) {
                 </div>
               </button>
 
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className={`demo-btn ${selectedRole === 'vendor' ? 'active' : ''}`}
                 onClick={() => handleDemoSelect('vendor')}
               >
@@ -219,8 +219,8 @@ function LoginPage({ onNavigate }) {
                 </div>
               </button>
 
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className={`demo-btn ${selectedRole === 'manager' ? 'active' : ''}`}
                 onClick={() => handleDemoSelect('manager')}
               >
@@ -231,8 +231,8 @@ function LoginPage({ onNavigate }) {
                 </div>
               </button>
 
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className={`demo-btn ${selectedRole === 'admin' ? 'active' : ''}`}
                 onClick={() => handleDemoSelect('admin')}
               >
@@ -253,11 +253,11 @@ function LoginPage({ onNavigate }) {
         {/* 40% Right Side Dynamic Illustration */}
         <div className="auth-visual-column">
           <div className="illustration-wrapper">
-            <img 
-              key={getIllustration()} 
-              src={getIllustration()} 
-              alt="Workspace View" 
-              className="illustration-img fade-in" 
+            <img
+              key={getIllustration()}
+              src={getIllustration()}
+              alt="Workspace View"
+              className="illustration-img fade-in"
             />
           </div>
         </div>

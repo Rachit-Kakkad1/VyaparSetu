@@ -14,7 +14,7 @@ sequelize.authenticate()
   .then(() => {
     console.log('Database connected successfully.');
     // In production, you'd use migrations instead of sync
-    return sequelize.sync(); 
+    return sequelize.sync();
   })
   .then(() => {
     server.listen(PORT, () => {
