@@ -1,0 +1,219 @@
+/* Logistics Command Center Style System */
+.logistics-console {
+  --l-bg: var(--bg-color);
+  --l-card: var(--card-bg);
+  --l-border: var(--border-color);
+  --l-cyan: var(--accent-color);
+  --l-cyan-glow: rgba(173, 139, 115, 0.15);
+  --l-orange: #f97316;
+  --l-orange-glow: rgba(249, 115, 22, 0.15);
+  --l-success: var(--badge-green-text);
+  --l-success-glow: var(--badge-green-bg);
+  --l-error: #ef4444;
+  --l-text: var(--text-color);
+  --l-text-mute: var(--text-secondary);
+  --l-navy: var(--sidebar-bg);
+
+  --map-grid-color: rgba(0, 0, 0, 0.05);
+  --map-route-color: rgba(0, 0, 0, 0.08);
+  --map-hub-dot: rgba(0, 0, 0, 0.4);
+  --map-hub-stroke: rgba(0, 0, 0, 0.6);
+  --map-hub-text: var(--text-color);
+  
+  background-color: var(--l-bg);
+  color: var(--l-text);
+  min-height: 100%;
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+body.dark .logistics-console {
+  --map-grid-color: rgba(255, 255, 255, 0.03);
+  --map-route-color: rgba(255, 255, 255, 0.06);
+  --map-hub-dot: rgba(255, 255, 255, 0.4);
+  --map-hub-stroke: rgba(255, 255, 255, 0.8);
+  --map-hub-text: rgba(255, 255, 255, 0.5);
+}
+
+/* KPI cards */
+.logistics-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.logistics-kpi-card {
+  background-color: var(--l-card);
+  border: 1px solid var(--l-border);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.logistics-kpi-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--l-cyan);
+  box-shadow: 0 8px 24px rgba(6, 182, 212, 0.15);
+}
+
+.logistics-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background-color: var(--l-border);
+}
+
+.logistics-kpi-card.cyan::before { background-color: var(--l-cyan); }
+.logistics-kpi-card.orange::before { background-color: var(--l-orange); }
+.logistics-kpi-card.success::before { background-color: var(--l-success); }
+.logistics-kpi-card.error::before { background-color: var(--l-error); }
+
+.logistics-kpi-val {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--l-text);
+  line-height: 1.2;
+  margin: 10px 0 5px 0;
+  font-family: 'Outfit', sans-serif;
+}
+
+/* Simulated Vector Map */
+.map-canvas-container {
+  background-color: var(--l-card);
+  border: 1px solid var(--l-border);
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+  height: 480px;
+}
+
+.map-svg-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.map-glow-polyline {
+  stroke-dasharray: 8;
+  animation: routeDash 30s linear infinite;
+}
+
+@keyframes routeDash {
+  to {
+    stroke-dashoffset: -1000;
+  }
+}
+
+.map-marker-pulse {
+  animation: pulseMarker 2s infinite ease-out;
+}
+
+@keyframes pulseMarker {
+  0% {
+    r: 4px;
+    opacity: 1;
+  }
+  100% {
+    r: 20px;
+    opacity: 0;
+  }
+}
+
+.map-truck-icon {
+  filter: drop-shadow(0 0 6px var(--l-cyan));
+  transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Alert center sliding drawer */
+.alert-drawer-card {
+  border-left: 4px solid var(--l-cyan);
+  background: var(--l-card);
+  border-top: 1px solid var(--l-border);
+  border-right: 1px solid var(--l-border);
+  border-bottom: 1px solid var(--l-border);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  transition: all 0.3s ease;
+}
+
+.alert-drawer-card.critical {
+  border-left-color: var(--l-orange);
+  background: linear-gradient(90deg, rgba(249, 115, 22, 0.05) 0%, var(--l-card) 100%);
+  animation: flashAlert 2s infinite ease-in-out;
+}
+
+@keyframes flashAlert {
+  0%, 100% { border-left-color: var(--l-orange); }
+  50% { border-left-color: #ef4444; }
+}
+
+/* ETA Progress Ring */
+.progress-ring-circle {
+  transition: stroke-dashoffset 0.6s ease;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+/* Timeline Layout */
+.timeline-track {
+  position: relative;
+  padding-left: 36px;
+}
+
+.timeline-track::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 14px;
+  bottom: 6px;
+  width: 2px;
+  background-color: var(--l-border);
+}
+
+.timeline-node {
+  position: relative;
+  padding-bottom: 24px;
+}
+
+.timeline-node::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: -28px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--l-border);
+  border: 2px solid var(--l-card);
+  z-index: 2;
+  transition: all 0.3s ease;
+}
+
+.timeline-node.active::before {
+  background-color: var(--l-cyan);
+  box-shadow: 0 0 10px var(--l-cyan);
+}
+
+.timeline-node.success::before {
+  background-color: var(--l-success);
+  box-shadow: 0 0 10px var(--l-success);
+}
+
+.timeline-node.warning::before {
+  background-color: var(--l-orange);
+  box-shadow: 0 0 10px var(--l-orange);
+}
