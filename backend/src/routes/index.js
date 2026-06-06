@@ -8,6 +8,7 @@ const invoiceRoutes = require('./invoice.routes');
 const approvalRoutes = require('./approval.routes');
 const notificationRoutes = require('./notification.routes');
 const emailLogRoutes = require('./emailLog.routes');
+const shipmentRoutes = require('./shipment.routes');
 
 const router = express.Router();
 
@@ -22,5 +23,6 @@ router.use('/invoices', invoiceRoutes);
 router.use('/approvals', approvalRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/email-logs', emailLogRoutes);
+router.use('/shipments', shipmentRoutes);
 
 module.exports = router;
