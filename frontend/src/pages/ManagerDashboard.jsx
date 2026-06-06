@@ -5,7 +5,29 @@ import {
   RefreshCw, BarChart3, Star, Percent, Truck, Send,
   Clock, MapPin, Navigation, ChevronRight, Download
 } from 'lucide-react'
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
+import L from 'leaflet'
 import '../styles/logistics.css'
+
+// Fix Leaflet default icon issue
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
+import markerIcon from 'leaflet/dist/images/marker-icon.png'
+import markerShadow from 'leaflet/dist/images/marker-shadow.png'
+
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+})
+
+// Helper component to center map when shipment is selected
+function ChangeView({ center, zoom }) {
+  const map = useMap();
+  map.setView(center, zoom);
+  return null;
+}
 
 function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
   const [activeTab, setActiveTab] = useState('overview') // 'overview' | 'vendor-quotations' | 'decided' | 'vendors' | 'shipments' | 'route-monitoring' | 'eta-intelligence' | 'shipment-notifications' | 'shipment-analytics'
@@ -1129,158 +1151,114 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
                     </div>
 
                     {/* Right Route Map Panel */}
-                    <div style={{ flex: '3', minWidth: '400px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                      <div className="map-canvas-container">
-                        {/* Grid Lines */}
-                        <svg className="map-svg-grid" viewBox="0 0 600 500">
-                          <defs>
-                            <pattern id="gridPattern" width="30" height="30" patternUnits="userSpaceOnUse">
-                              <path d="M 30 0 L 0 0 0 30" fill="none" stroke="var(--map-grid-color)" strokeWidth="1" />
-                            </pattern>
-                          </defs>
-                          <rect width="100%" height="100%" fill="url(#gridPattern)" />
-
-                          {/* Pre-drawn routes */}
-                          <line x1="350.3" y1="77.7" x2="291.1" y2="111.7" stroke="var(--map-route-color)" strokeWidth="2" strokeDasharray="5" />
-                          <line x1="169.9" y1="268.4" x2="210.7" y2="279.5" stroke="var(--map-route-color)" strokeWidth="2" strokeDasharray="5" />
-                          <line x1="366.4" y1="390.5" x2="477.9" y2="388.3" stroke="var(--map-route-color)" strokeWidth="2" strokeDasharray="5" />
-
-                          {/* Active Shipment markers */}
-                          {shipments.map(s => {
-                            const mapLngToX = (lng) => 50 + ((lng - 70) / 12) * 500;
-                            const mapLatToY = (lat) => 450 - ((lat - 10) / 20) * 400;
-
-                            const x1 = mapLngToX(s.originLng);
-                            const y1 = mapLatToY(s.originLat);
-                            const x2 = mapLngToX(s.destinationLng);
-                            const y2 = mapLatToY(s.destinationLat);
-                            const tx = mapLngToX(s.currentLng);
-                            const ty = mapLatToY(s.currentLat);
-
-                            const isFocused = selectedShipment?.id === s.id;
-
-                            return (
-                              <g key={s.id}>
-                                <line
-                                  x1={x1}
-                                  y1={y1}
-                                  x2={x2}
-                                  y2={y2}
-                                  stroke={isFocused ? "var(--l-cyan)" : "var(--l-border)"}
-                                  strokeWidth={isFocused ? 3 : 1.5}
-                                  strokeDasharray="4,4"
-                                  opacity={isFocused ? 1 : 0.4}
-                                />
-
-                                <line
-                                  x1={x1}
-                                  y1={y1}
-                                  x2={tx}
-                                  y2={ty}
-                                  stroke={s.status === 'Delivered' ? 'var(--l-success)' : 'var(--l-cyan)'}
-                                  strokeWidth={isFocused ? 4 : 2}
-                                  opacity={isFocused ? 1 : 0.5}
-                                  className="map-glow-polyline"
-                                />
-
-                                {s.status !== 'Delivered' && (
-                                  <circle
-                                    cx={x2}
-                                    cy={y2}
-                                    r="10"
-                                    fill="none"
-                                    stroke="var(--l-orange)"
-                                    strokeWidth="1.5"
-                                    className="map-marker-pulse"
-                                  />
-                                )}
-
-                                <g
-                                  transform={`translate(${tx}, ${ty})`}
-                                  style={{ cursor: 'pointer' }}
-                                  onClick={() => setSelectedShipment(s)}
-                                >
-                                  <circle
-                                    r="8"
-                                    fill={s.status === 'Delivered' ? 'var(--l-success)' : s.status === 'Arrived' ? 'var(--l-success)' : 'var(--l-cyan)'}
-                                    stroke="#ffffff"
-                                    strokeWidth="2"
-                                    style={{ filter: `drop-shadow(0 0 6px ${s.status === 'Delivered' ? 'var(--l-success)' : 'var(--l-cyan)'})` }}
-                                  />
-                                  {isFocused && (
-                                    <circle
-                                      r="16"
-                                      fill="none"
-                                      stroke="var(--l-cyan)"
-                                      strokeWidth="1.5"
-                                      className="map-marker-pulse"
-                                    />
-                                  )}
-                                </g>
-                              </g>
-                            );
-                          })}
-
-                          {/* Hub Dots */}
-                          {[
-                            { name: 'Delhi', lat: 28.6139, lng: 77.2090 },
-                            { name: 'Jaipur', lat: 26.9124, lng: 75.7873 },
-                            { name: 'Mumbai', lat: 19.0760, lng: 72.8777 },
-                            { name: 'Pune', lat: 18.5204, lng: 73.8567 },
-                            { name: 'Bengaluru', lat: 12.9716, lng: 77.5946 },
-                            { name: 'Chennai', lat: 13.0827, lng: 80.2707 }
-                          ].map(city => {
-                            const mapLngToX = (lng) => 50 + ((lng - 70) / 12) * 500;
-                            const mapLatToY = (lat) => 450 - ((lat - 10) / 20) * 400;
-                            const cx = mapLngToX(city.lng);
-                            const cy = mapLatToY(city.lat);
-                            return (
-                              <g key={city.name}>
-                                <circle cx={cx} cy={cy} r="4" fill="var(--map-hub-dot)" stroke="var(--map-hub-stroke)" strokeWidth="1" />
-                                <text x={cx + 8} y={cy + 4} fill="var(--map-hub-text)" fontSize="10" fontFamily="monospace">{city.name}</text>
-                              </g>
-                            )
-                          })}
-                        </svg>
-
-                        {/* Tooltip Popup */}
+                    <div style={{ flex: '3', minWidth: '400px', display: 'flex', flexDirection: 'column', gap: '15px', height: '500px', position: 'relative' }}>
+                      <MapContainer 
+                        center={[20.5937, 78.9629]} 
+                        zoom={5} 
+                        style={{ height: '100%', width: '100%', borderRadius: '16px', border: '1px solid var(--l-border)' }}
+                      >
+                        <TileLayer
+                          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        />
+                        
                         {selectedShipment && (
-                          <div
-                            style={{
-                              position: 'absolute',
-                              bottom: '20px',
-                              left: '20px',
-                              right: '20px',
-                              background: 'var(--l-card)',
-                              border: '1px solid var(--l-cyan)',
-                              borderRadius: '12px',
-                              padding: '15px',
-                              backdropFilter: 'blur(5px)',
-                              boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                              zIndex: 10
-                            }}
-                          >
-                            <div>
-                              <span style={{ fontSize: '0.7rem', color: 'var(--l-cyan)', fontWeight: 'bold', textTransform: 'uppercase' }}>Focus tracking feed</span>
-                              <h4 style={{ margin: '2px 0 0 0', color: 'var(--l-text)', fontSize: '1.05rem' }}>{selectedShipment.shipmentNumber}</h4>
-                              <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--l-text-mute)' }}>
-                                Origin: {selectedShipment.originAddress} &bull; Destination: {selectedShipment.destinationAddress}
-                              </p>
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                              <span style={{ display: 'block', fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--l-orange)' }}>
-                                ETA: {selectedShipment.status === 'Delivered' ? 'Delivered' : selectedShipment.status === 'Arrived' ? 'Arrived' : new Date(selectedShipment.estimatedArrival).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                              <span style={{ fontSize: '0.7rem', color: 'var(--l-text-mute)' }}>
-                                Completion: {selectedShipment.progressPercentage}%
-                              </span>
-                            </div>
-                          </div>
+                          <ChangeView 
+                            center={[selectedShipment.currentLat || selectedShipment.originLat, selectedShipment.currentLng || selectedShipment.originLng]} 
+                            zoom={7} 
+                          />
                         )}
-                      </div>
+
+                        {shipments.map(s => {
+                          const points = s.routePoints || [[s.originLat, s.originLng], [s.destinationLat, s.destinationLng]];
+                          const isSelected = selectedShipment?.id === s.id;
+                          
+                          return (
+                            <React.Fragment key={s.id}>
+                              {/* Full Route Polyline */}
+                              <Polyline 
+                                positions={points} 
+                                color={isSelected ? 'var(--l-cyan)' : 'var(--l-border)'}
+                                weight={isSelected ? 4 : 2}
+                                opacity={isSelected ? 0.8 : 0.4}
+                                dashArray={isSelected ? null : "5, 10"}
+                              />
+                              
+                              {/* Destination Marker */}
+                              <Marker position={[s.destinationLat, s.destinationLng]}>
+                                <Popup>
+                                    <strong>Destination: {s.shipmentNumber}</strong><br/>
+                                    Final warehouse location.
+                                </Popup>
+                              </Marker>
+
+                              {/* Active Vehicle Marker */}
+                              <Marker 
+                                position={[s.currentLat || s.originLat, s.currentLng || s.originLng]}
+                                eventHandlers={{
+                                  click: () => setSelectedShipment(s),
+                                }}
+                              >
+                                <Popup>
+                                  <strong>{s.shipmentNumber}</strong><br/>
+                                  Vendor: {s.vendor?.companyName}<br/>
+                                  Status: {s.status}<br/>
+                                  Progress: {s.progressPercentage}%
+                                </Popup>
+                              </Marker>
+                            </React.Fragment>
+                          );
+                        })}
+
+                        {/* Standard Hub Markers */}
+                        {[
+                          { name: 'Delhi Hub', lat: 28.6139, lng: 77.2090 },
+                          { name: 'Mumbai Hub', lat: 19.0760, lng: 72.8777 },
+                          { name: 'Bengaluru Hub', lat: 12.9716, lng: 77.5946 }
+                        ].map(hub => (
+                          <Marker key={hub.name} position={[hub.lat, hub.lng]} opacity={0.6}>
+                            <Popup>{hub.name}</Popup>
+                          </Marker>
+                        ))}
+                      </MapContainer>
+
+                      {/* Tooltip Popup */}
+                      {selectedShipment && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            bottom: '20px',
+                            left: '20px',
+                            right: '20px',
+                            background: 'var(--l-card)',
+                            border: '1px solid var(--l-cyan)',
+                            borderRadius: '12px',
+                            padding: '15px',
+                            backdropFilter: 'blur(5px)',
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            zIndex: 1000
+                          }}
+                        >
+                          <div>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--l-cyan)', fontWeight: 'bold', textTransform: 'uppercase' }}>Live tracking feed</span>
+                            <h4 style={{ margin: '2px 0 0 0', color: 'var(--l-text)', fontSize: '1.05rem' }}>{selectedShipment.shipmentNumber}</h4>
+                            <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--l-text-mute)' }}>
+                                {selectedShipment.vendor?.companyName} &bull; {selectedShipment.status}
+                            </p>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <span style={{ display: 'block', fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--l-orange)' }}>
+                              ETA: {selectedShipment.status === 'Delivered' ? 'Delivered' : new Date(selectedShipment.estimatedArrival).toLocaleTimeString()}
+                            </span>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--l-text-mute)' }}>
+                              Completion: {selectedShipment.progressPercentage}%
+                            </span>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                   </div>
