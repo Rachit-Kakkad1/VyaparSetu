@@ -23,7 +23,7 @@ function OfficerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
     try {
       const token = localStorage.getItem('accessToken');
       const headers = { Authorization: 'Bearer ' + token };
-      const baseUrl = 'https://vyaparsetu-f6yi.onrender.com/api';
+      const baseUrl = `${(import.meta.env.VITE_API_URL || 'https://vyaparsetu-f6yi.onrender.com')}/api`;
 
       const [rRes, vRes] = await Promise.all([
         fetch(baseUrl + '/rfqs', { headers }),
@@ -47,7 +47,7 @@ function OfficerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
     e.preventDefault();
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch('https://vyaparsetu-f6yi.onrender.com/api/rfqs', {
+      const res = await fetch(`${(import.meta.env.VITE_API_URL || 'https://vyaparsetu-f6yi.onrender.com')}/api/rfqs`, {
         method: 'POST',
         headers: { 
             'Content-Type': 'application/json',
@@ -135,16 +135,42 @@ function OfficerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
 
         <div className="dashboard-body">
             {activeTab === 'overview' && (
-                <section className="stats-kpi-grid">
-                    <div className="kpi-card">
-                        <span className="kpi-title">Total RFQs</span>
-                        <span className="kpi-value">{rfqs.length}</span>
+                <>
+                    <section className="stats-kpi-grid">
+                        <div className="kpi-card">
+                            <span className="kpi-title">Total RFQs</span>
+                            <span className="kpi-value">{rfqs.length}</span>
+                        </div>
+                        <div className="kpi-card">
+                            <span className="kpi-title">Active Vendors</span>
+                            <span className="kpi-value">{vendors.length}</span>
+                        </div>
+                    </section>
+                    
+                    <div className="dashboard-section" style={{ marginTop: '2rem' }}>
+                        <h2 style={{ marginBottom: '1rem', color: 'var(--text-primary)', fontSize: '1.2rem', fontWeight: 600 }}>Recent RFQs</h2>
+                        <div className="dashboard-table-container">
+                            <table className="dashboard-table">
+                                <thead>
+                                    <tr><th>RFQ #</th><th>Title</th><th>Status</th><th>Deadline</th></tr>
+                                </thead>
+                                <tbody>
+                                    {rfqs.slice(0, 5).map(r => (
+                                        <tr key={r.id}>
+                                            <td><code>{r.rfqNumber}</code></td>
+                                            <td>{r.title}</td>
+                                            <td><span className={`status-pill status-${r.status.toLowerCase()}`}>{r.status}</span></td>
+                                            <td>{new Date(r.deadline).toLocaleDateString()}</td>
+                                        </tr>
+                                    ))}
+                                    {rfqs.length === 0 && (
+                                        <tr><td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-secondary)' }}>No RFQs found</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                    <div className="kpi-card">
-                        <span className="kpi-title">Active Vendors</span>
-                        <span className="kpi-value">{vendors.length}</span>
-                    </div>
-                </section>
+                </>
             )}
 
             {activeTab === 'rfqs' && (

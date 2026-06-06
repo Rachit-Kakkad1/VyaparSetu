@@ -88,7 +88,7 @@ function InvoiceBuilder({ userRole = 'MANAGER', inline = false }) {
     setError(null)
     try {
       const token = localStorage.getItem('accessToken') || ''
-      const res = await fetch('https://vyaparsetu-f6yi.onrender.com/api/invoices', {
+      const res = await fetch(`${(import.meta.env.VITE_API_URL || 'https://vyaparsetu-f6yi.onrender.com')}/api/invoices`, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + token
@@ -148,7 +148,7 @@ function InvoiceBuilder({ userRole = 'MANAGER', inline = false }) {
     
     // Fetch Vendors
     try {
-      const res = await fetch('https://vyaparsetu-f6yi.onrender.com/api/vendors', { headers })
+      const res = await fetch(`${(import.meta.env.VITE_API_URL || 'https://vyaparsetu-f6yi.onrender.com')}/api/vendors`, { headers })
       if (res.ok) {
         const data = await res.json()
         setVendors(data.data.vendors || [])
@@ -157,7 +157,7 @@ function InvoiceBuilder({ userRole = 'MANAGER', inline = false }) {
 
     // Fetch RFQs
     try {
-      const res = await fetch('https://vyaparsetu-f6yi.onrender.com/api/rfqs', { headers })
+      const res = await fetch(`${(import.meta.env.VITE_API_URL || 'https://vyaparsetu-f6yi.onrender.com')}/api/rfqs`, { headers })
       if (res.ok) {
         const data = await res.json()
         setRfqs(data.data.rfqs || [])
@@ -166,7 +166,7 @@ function InvoiceBuilder({ userRole = 'MANAGER', inline = false }) {
 
     // Fetch POs
     try {
-      const res = await fetch('https://vyaparsetu-f6yi.onrender.com/api/pos', { headers })
+      const res = await fetch(`${(import.meta.env.VITE_API_URL || 'https://vyaparsetu-f6yi.onrender.com')}/api/pos`, { headers })
       if (res.ok) {
         const data = await res.json()
         setPos(data.data.pos || [])
@@ -363,8 +363,8 @@ function InvoiceBuilder({ userRole = 'MANAGER', inline = false }) {
     try {
       const token = localStorage.getItem('accessToken') || ''
       const url = viewMode === 'edit'
-        ? `https://vyaparsetu-f6yi.onrender.com/api/invoices/${selectedInvoice.id}`
-        : 'https://vyaparsetu-f6yi.onrender.com/api/invoices'
+        ? `${(import.meta.env.VITE_API_URL || 'https://vyaparsetu-f6yi.onrender.com')}/api/invoices/${selectedInvoice.id}`
+        : `${(import.meta.env.VITE_API_URL || 'https://vyaparsetu-f6yi.onrender.com')}/api/invoices`
       
       const method = viewMode === 'edit' ? 'PUT' : 'POST'
 
@@ -400,7 +400,7 @@ function InvoiceBuilder({ userRole = 'MANAGER', inline = false }) {
     setSuccessMsg(null)
     try {
       const token = localStorage.getItem('accessToken') || ''
-      const res = await fetch(`https://vyaparsetu-f6yi.onrender.com/api/invoices/${invoiceId}/generate-pdf`, {
+      const res = await fetch(`${(import.meta.env.VITE_API_URL || 'https://vyaparsetu-f6yi.onrender.com')}/api/invoices/${invoiceId}/generate-pdf`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

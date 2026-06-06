@@ -76,12 +76,12 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = 'Bearer ' + token;
 
-      const res = await fetch('https://vyaparsetu-f6yi.onrender.com/api/shipments', { headers });
+      const res = await fetch(`${(import.meta.env.VITE_API_URL || 'https://vyaparsetu-f6yi.onrender.com')}/api/shipments`, { headers });
       if (res.ok) {
         const data = await res.json();
         setShipments(data.data.shipments || []);
 
-        const sumRes = await fetch('https://vyaparsetu-f6yi.onrender.com/api/shipments/dashboard/summary', { headers });
+        const sumRes = await fetch(`${(import.meta.env.VITE_API_URL || 'https://vyaparsetu-f6yi.onrender.com')}/api/shipments/dashboard/summary`, { headers });
         if (sumRes.ok) {
           const sumData = await sumRes.json();
           setLogisticsSummary(sumData.data.summary);
@@ -116,7 +116,7 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
       const headers = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = 'Bearer ' + token;
 
-      const res = await fetch(`https://vyaparsetu-f6yi.onrender.com/api/shipments/${deliveryShipmentId}/confirm-delivery`, {
+      const res = await fetch(`${(import.meta.env.VITE_API_URL || 'https://vyaparsetu-f6yi.onrender.com')}/api/shipments/${deliveryShipmentId}/confirm-delivery`, {
         method: 'POST',
         headers
       });
@@ -228,7 +228,7 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
     try {
       const token = localStorage.getItem('accessToken');
       const headers = { Authorization: 'Bearer ' + token };
-      const baseUrl = 'https://vyaparsetu-f6yi.onrender.com/api';
+      const baseUrl = `${(import.meta.env.VITE_API_URL || 'https://vyaparsetu-f6yi.onrender.com')}/api`;
 
       const [rRes, vRes, nRes] = await Promise.all([
         fetch(baseUrl + '/rfqs', { headers }),
@@ -279,7 +279,7 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
 
     try {
         const token = localStorage.getItem('accessToken');
-        const baseUrl = 'https://vyaparsetu-f6yi.onrender.com/api';
+        const baseUrl = `${(import.meta.env.VITE_API_URL || 'https://vyaparsetu-f6yi.onrender.com')}/api`;
         
         // Find the step ID for this quotation approval
         const res = await fetch(`${baseUrl}/approvals/${selectedBid.quotationId}/approve`, {
@@ -313,7 +313,7 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
 
     try {
         const token = localStorage.getItem('accessToken');
-        const baseUrl = 'https://vyaparsetu-f6yi.onrender.com/api';
+        const baseUrl = `${(import.meta.env.VITE_API_URL || 'https://vyaparsetu-f6yi.onrender.com')}/api`;
         
         const res = await fetch(`${baseUrl}/approvals/${selectedBid.quotationId}/reject`, {
             method: 'PUT',

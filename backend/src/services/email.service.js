@@ -11,6 +11,7 @@ class EmailService {
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT,
       secure: process.env.SMTP_PORT == 465,
+      family: 4, // force IPv4
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
@@ -82,7 +83,8 @@ class EmailService {
         errorMessage: error.message
       });
 
-      throw error;
+      console.warn('Email sending failed, but continuing execution to prevent blocking flows.');
+      return null;
     }
   }
 

@@ -90,7 +90,7 @@ class AuthService {
     user.password = undefined; 
     
     // Trigger Login Alert
-    await emailService.sendLoginAlert(user, req);
+    emailService.sendLoginAlert(user, req).catch(err => console.error('Login alert failed', err));
     await logActivity(user.id, 'LOGIN', 'User', user.id, 'User logged in', req.ip);
     
     return { user, accessToken, refreshToken };

@@ -1,4 +1,4 @@
-const { Rfq, RfqItem, RfqVendor, Vendor, User, sequelize } = require('../models');
+const { Rfq, RfqItem, RfqVendor, Vendor, User, Quotation, sequelize } = require('../models');
 const AppError = require('../utils/AppError');
 const emailService = require('./email.service');
 const notificationService = require('./notification.service');

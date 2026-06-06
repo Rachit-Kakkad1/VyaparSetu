@@ -28,7 +28,7 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
     try {
       const token = localStorage.getItem('accessToken');
       const headers = { Authorization: 'Bearer ' + token };
-      const baseUrl = 'https://vyaparsetu-f6yi.onrender.com/api';
+      const baseUrl = `${(import.meta.env.VITE_API_URL || 'https://vyaparsetu-f6yi.onrender.com')}/api`;
 
       const [uRes, vRes, rRes, bRes, pRes, iRes, lRes] = await Promise.all([
         fetch(baseUrl + '/users', { headers }),
@@ -65,7 +65,7 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
   const handleToggleUserStatus = async (userId) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch(`https://vyaparsetu-f6yi.onrender.com/api/users/${userId}/toggle-status`, {
+      const res = await fetch(`${(import.meta.env.VITE_API_URL || 'https://vyaparsetu-f6yi.onrender.com')}/api/users/${userId}/toggle-status`, {
         method: 'PATCH',
         headers: { Authorization: 'Bearer ' + token }
       });
@@ -78,7 +78,7 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
   const handleVendorStatusChange = async (vendorId, newStatus) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch(`https://vyaparsetu-f6yi.onrender.com/api/vendors/${vendorId}`, {
+      const res = await fetch(`${(import.meta.env.VITE_API_URL || 'https://vyaparsetu-f6yi.onrender.com')}/api/vendors/${vendorId}`, {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
