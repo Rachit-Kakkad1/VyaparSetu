@@ -57,16 +57,37 @@ function LoginPage({ onNavigate }) {
     }
   }, [selectedRole])
 
-  const handleSignIn = (e) => {
+  const handleSignIn = async (e) => {
     e.preventDefault()
-    const lowerEmail = email.toLowerCase()
-    if (lowerEmail === 'admin@vyaparsetu.com') {
-      onNavigate('admin-dashboard')
-    } else if (lowerEmail === 'manager@vyaparsetu.com') {
-      onNavigate('manager-dashboard')
-    } else {
-      alert(`Signed in as: ${email}`)
-      onNavigate('landing')
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      })
+      
+      const data = await response.json()
+      
+      if (response.ok) {
+        localStorage.setItem('accessToken', data.data.accessToken)
+        localStorage.setItem('user', JSON.stringify(data.data.user))
+        
+        const role = data.data.user.role.name
+        if (role === 'ADMIN') {
+          onNavigate('admin-dashboard')
+        } else if (role === 'MANAGER' || role === 'PROCUREMENT_OFFICER') {
+          onNavigate('manager-dashboard')
+        } else if (role === 'VENDOR') {
+          onNavigate('landing') // or vendor dashboard if exists
+        } else {
+          onNavigate('landing')
+        }
+      } else {
+        alert(data.message || 'Login failed')
+      }
+    } catch (error) {
+      console.error('Login Error:', error)
+      alert('Could not connect to authentication server.')
     }
   }
 
