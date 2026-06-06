@@ -180,6 +180,30 @@ class ShipmentService {
   async getAllShipments(query, user) {
     return await Shipment.findAll({ order: [['createdAt', 'DESC']] });
   }
+
+  async getDashboardSummary() {
+    const total = await Shipment.count();
+    const inTransit = await Shipment.count({ where: { status: 'IN_TRANSIT' } });
+    const delivered = await Shipment.count({ where: { status: 'DELIVERED' } });
+    
+    return {
+      activeShipments: inTransit,
+      totalShipments: total,
+      completedDeliveries: delivered,
+      delayedShipments: 0 // Mock for now
+    };
+  }
+
+  async confirmDelivery(id, userId) {
+    const shipment = await this.getShipmentById(id);
+    if (!shipment) throw new AppError('Shipment not found', 404);
+    
+    await shipment.update({ status: 'DELIVERED', isDelivered: true, actualArrival: new Date() });
+    
+    await logActivity(userId, 'CONFIRM_DELIVERY', 'Shipment', id, 'Delivery manually confirmed by manager');
+    
+    return shipment;
+  }
 }
 
 module.exports = new ShipmentService();

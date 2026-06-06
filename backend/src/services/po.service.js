@@ -64,6 +64,13 @@ class PurchaseOrderService {
     if (!po) throw new AppError('PO not found', 404);
     return po;
   }
+
+  async getAllPOs() {
+    return await PurchaseOrder.findAll({
+      order: [['createdAt', 'DESC']],
+      include: [{ model: Vendor, as: 'vendor' }]
+    });
+  }
 }
 
 module.exports = new PurchaseOrderService();

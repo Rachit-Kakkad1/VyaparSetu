@@ -42,6 +42,24 @@ class ShipmentController {
       next(error);
     }
   }
+
+  async getDashboardSummary(req, res, next) {
+    try {
+      const summary = await shipmentService.getDashboardSummary();
+      ApiResponse.success(res, 'Shipment summary retrieved', { summary });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async confirmDelivery(req, res, next) {
+    try {
+      const shipment = await shipmentService.confirmDelivery(req.params.id, req.user.id);
+      ApiResponse.success(res, 'Delivery confirmed successfully', { shipment });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new ShipmentController();

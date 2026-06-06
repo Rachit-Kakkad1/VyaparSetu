@@ -20,6 +20,15 @@ class PurchaseOrderController {
       next(error);
     }
   }
+
+  async getAllPOs(req, res, next) {
+    try {
+      const pos = await poService.getAllPOs();
+      ApiResponse.success(res, 'Purchase Orders retrieved successfully', { pos });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new PurchaseOrderController();

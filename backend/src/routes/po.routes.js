@@ -8,7 +8,10 @@ const router = express.Router();
 
 router.use(protect);
 
-router.post('/', restrictTo('ADMIN', 'PROCUREMENT_OFFICER'), poValidator, validate, poController.generatePO);
+router.route('/')
+  .get(restrictTo('ADMIN', 'MANAGER', 'PROCUREMENT_OFFICER'), poController.getAllPOs)
+  .post(restrictTo('ADMIN', 'PROCUREMENT_OFFICER'), poValidator, validate, poController.generatePO);
+
 router.get('/:id', poController.getPOById);
 
 module.exports = router;
