@@ -2,16 +2,16 @@ import React, { useState, useEffect, useRef } from 'react'
 import { ArrowLeft, User, Shield, Briefcase, Users } from 'lucide-react'
 
 function LoginPage({ onNavigate }) {
-  const [email, setEmail] = useState('officer@vendorbridge.com')
+  const [email, setEmail] = useState('officer@vyaparsetu.com')
   const [password, setPassword] = useState('password123')
   const [selectedRole, setSelectedRole] = useState('officer') // default 'officer'
   const demoBoxRef = useRef(null)
 
   const demoCredentials = {
-    officer: { email: 'officer@vendorbridge.com', password: 'password123' },
-    vendor: { email: 'vendor@vendorbridge.com', password: 'password123' },
-    manager: { email: 'manager@vendorbridge.com', password: 'password123' },
-    admin: { email: 'admin@vendorbridge.com', password: 'password123' }
+    officer: { email: 'officer@vyaparsetu.com', password: 'password123' },
+    vendor: { email: 'vendor@vyaparsetu.com', password: 'password123' },
+    manager: { email: 'manager@vyaparsetu.com', password: 'password123' },
+    admin: { email: 'admin@vyaparsetu.com', password: 'password123' }
   }
 
   const handleDemoSelect = (role) => {
@@ -60,15 +60,41 @@ function LoginPage({ onNavigate }) {
   const handleSignIn = (e) => {
     e.preventDefault()
     const lowerEmail = email.toLowerCase()
-    if (lowerEmail === 'admin@vendorbridge.com') {
+    if (lowerEmail === 'admin@vyaparsetu.com') {
       onNavigate('admin-dashboard')
-    } else if (lowerEmail === 'manager@vendorbridge.com') {
+    } else if (lowerEmail === 'manager@vyaparsetu.com') {
       onNavigate('manager-dashboard')
     } else {
       alert(`Signed in as: ${email}`)
       onNavigate('landing')
     }
   }
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      alert('Please enter your email address first.')
+      return
+    }
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/forgot-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email })
+      })
+      const data = await response.json()
+      if (response.ok) {
+        alert('Password reset link sent to ' + email)
+      } else {
+        // Fallback for hackathon demo if backend user doesn't exist
+        alert('Demo mode: Password reset link virtually sent to ' + email)
+      }
+    } catch (error) {
+      alert('Demo mode: Password reset link virtually sent to ' + email)
+    }
+  }
+
 
   // Determine current image based on selected dummy role
   const getIllustration = () => {
@@ -111,7 +137,16 @@ function LoginPage({ onNavigate }) {
               </div>
 
               <div className="form-group">
-                <label htmlFor="password">Password</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <label htmlFor="password" style={{ marginBottom: 0 }}>Password</label>
+                  <button 
+                    type="button" 
+                    onClick={handleForgotPassword}
+                    style={{ background: 'none', border: 'none', color: 'var(--accent-color)', fontSize: '0.8rem', cursor: 'pointer', padding: 0 }}
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
                 <input
                   type="password"
                   id="password"
