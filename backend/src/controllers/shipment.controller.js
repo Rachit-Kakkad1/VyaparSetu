@@ -33,6 +33,15 @@ class ShipmentController {
       next(error);
     }
   }
+
+  async getRoute(req, res, next) {
+    try {
+      const route = await shipmentService.getRoute(req.params.id);
+      ApiResponse.success(res, 'Shipment route retrieved', { route });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new ShipmentController();

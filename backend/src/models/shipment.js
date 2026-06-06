@@ -17,7 +17,9 @@ module.exports = (sequelize, DataTypes) => {
     progressPercentage: { type: DataTypes.FLOAT, defaultValue: 0.0 },
     estimatedArrival: { type: DataTypes.DATE },
     actualArrival: { type: DataTypes.DATE },
-    isDelivered: { type: DataTypes.BOOLEAN, defaultValue: false }
+    isDelivered: { type: DataTypes.BOOLEAN, defaultValue: false },
+    routeGeometry: { type: DataTypes.TEXT }, // Stores the encoded polyline or coordinates JSON
+    routePoints: { type: DataTypes.JSONB, defaultValue: [] } // Stores the list of [lat, lng] for simulation
   }, {
     tableName: 'shipments',
     timestamps: true
