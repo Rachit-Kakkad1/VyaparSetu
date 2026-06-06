@@ -403,3 +403,6 @@ MIT © 2026 VyaparSetu Team
 *If this project helped you, drop a ⭐ — it means the world to us.*
 
 </div>
+
+## Deployment
+Deployed on Vercel and Render.
