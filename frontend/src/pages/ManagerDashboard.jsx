@@ -176,8 +176,22 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
 
       if (rRes.ok) {
         const allRfqs = rData.data.rfqs || rData.data || [];
-        setPublishedRfqs(allRfqs.filter(r => r.status === 'PUBLISHED'));
-        setDecidedRequests(allRfqs.filter(r => r.status === 'CLOSED' || r.status === 'CANCELLED'));
+        const mappedRfqs = allRfqs.map(r => ({
+            ...r,
+            bids: (r.quotations || []).map(q => ({
+                id: q.id,
+                quotationId: q.id,
+                vendorName: q.vendor?.companyName || 'Unknown Vendor',
+                price: parseFloat(q.totalAmount),
+                delivery: q.deliveryTimeDays + ' days',
+                status: q.status,
+                terms: q.remarks,
+                rating: q.vendor?.performanceScore || 0
+            }))
+        }));
+        
+        setPublishedRfqs(mappedRfqs.filter(r => r.status === 'PUBLISHED'));
+        setDecidedRequests(mappedRfqs.filter(r => r.status === 'CLOSED' || r.status === 'CANCELLED'));
       }
       if (vRes.ok) setVendorsList(vData.data.rows || vData.data || []);
       if (nRes.ok) setNotifications(nData.data.notifications || []);

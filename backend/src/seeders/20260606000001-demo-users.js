@@ -26,6 +26,28 @@ module.exports = {
       },
       {
         id: uuidv4(),
+        firstName: 'Rachit',
+        lastName: 'Kakkad',
+        email: 'kakkadrachit1@gmail.com',
+        password: password,
+        roleId: getRoleId('ADMIN'),
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: uuidv4(),
+        firstName: 'Tapan',
+        lastName: 'Vachhani',
+        email: 'vachhanitapan7@gmail.com',
+        password: password,
+        roleId: getRoleId('VENDOR'),
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        id: uuidv4(),
         firstName: 'Procurement',
         lastName: 'Officer',
         email: 'officer@vyaparsetu.com',

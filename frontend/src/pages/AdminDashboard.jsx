@@ -7,20 +7,8 @@ import {
 } from 'lucide-react'
 
 function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
-  const [activeTab, setActiveTab] = useState('overview') // 'overview' | 'users' | 'vendors' | 'pipeline' | 'logs'
-  const [pipelineSubTab, setPipelineSubTab] = useState('rfqs') // 'rfqs' | 'bids' | 'pos' | 'invoices'
-  
-
-  // Modals state
-  const [showAddUserModal, setShowAddUserModal] = useState(false)
-  const [newUserName, setNewUserName] = useState('')
-  const [newUserEmail, setNewUserEmail] = useState('')
-  const [newUserPhone, setNewUserPhone] = useState('')
-  const [newUserRole, setNewUserRole] = useState('officer') // 'officer' | 'manager'
-  const [newUserPassword, setNewUserPassword] = useState('')
-  const [adminProfile, setAdminProfile] = useState({ name: 'Super Admin', email: 'admin@vyapar.gov', phone: '+91 98765 43210' })
-  const [showProfileModal, setShowProfileModal] = useState(false)
-  const [editingUser, setEditingUser] = useState(null)
+  const [activeTab, setActiveTab] = useState('overview') 
+  const [pipelineSubTab, setPipelineSubTab] = useState('rfqs') 
   
   // Real Databases
   const [users, setUsers] = useState([])
@@ -30,6 +18,10 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
   const [pos, setPos] = useState([])
   const [invoices, setInvoices] = useState([])
   const [logs, setLogs] = useState([])
+
+  const [usersSearch, setUsersSearch] = useState('')
+  const [vendorsSearch, setVendorsSearch] = useState('')
+  const [logsSearch, setLogsSearch] = useState('')
 
   const fetchData = async () => {
     try {
@@ -69,11 +61,6 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
     return () => clearInterval(interval);
   }, []);
 
-  // Search filter states
-  const [usersSearch, setUsersSearch] = useState('')
-  const [vendorsSearch, setVendorsSearch] = useState('')
-  const [logsSearch, setLogsSearch] = useState('')
-
   const handleToggleUserStatus = async (userId) => {
     try {
       const token = localStorage.getItem('accessToken');
@@ -104,7 +91,6 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
     }
   }
 
-  // Filtered databases
   const filteredUsers = users.filter(user => 
     (user.firstName + ' ' + user.lastName).toLowerCase().includes(usersSearch.toLowerCase()) ||
     user.email.toLowerCase().includes(usersSearch.toLowerCase()) ||
@@ -122,12 +108,6 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
                           (log.user?.email || '').toLowerCase().includes(logsSearch.toLowerCase())
     return matchesSearch
   })
-
-  // Calculations for summary stats
-  const totalRegisteredUsers = users.length
-  const totalApprovedVendors = vendors.filter(v => v.status === 'APPROVED').length
-  const totalActiveRFQs = rfqs.filter(r => r.status === 'PUBLISHED').length
-  const totalPendingPOs = pos.filter(p => p.status === 'ISSUED').length
 
   return (
     <div className="dashboard-layout">
@@ -168,16 +148,10 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
             <RefreshCw size={14} />
             <span>{darkMode ? 'Light Theme' : 'Dark Theme'}</span>
           </button>
-          <div className="admin-profile-card" onClick={() => setShowProfileModal(true)} style={{ cursor: 'pointer' }}>
-            <div className="profile-avatar">AD</div>
-            <div className="profile-info">
-              <span className="profile-name">{adminProfile.name}</span>
-              <span className="profile-email">{adminProfile.email}</span>
-            </div>
-            <button className="logout-btn" onClick={(e) => { e.stopPropagation(); onNavigate('landing'); }} title="Sign Out">
-              <LogOut size={16} />
-            </button>
-          </div>
+          <button className="logout-btn" onClick={() => onNavigate('landing')} style={{ width: '100%', justifyContent: 'flex-start', padding: '12px 20px', display: 'flex', alignItems: 'center', gap: '10px', background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}>
+            <LogOut size={16} />
+            <span>Sign Out</span>
+          </button>
         </div>
       </aside>
 
@@ -204,21 +178,47 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
               <section className="stats-kpi-grid">
                 <div className="kpi-card">
                   <div className="kpi-header"><span className="kpi-title">Global Accounts</span><Users size={16} /></div>
-                  <span className="kpi-value">{totalRegisteredUsers}</span>
+                  <span className="kpi-value">{users.length}</span>
                 </div>
                 <div className="kpi-card">
                   <div className="kpi-header"><span className="kpi-title">Verified Vendors</span><UserCheck size={16} /></div>
-                  <span className="kpi-value">{totalApprovedVendors}</span>
+                  <span className="kpi-value">{vendors.filter(v => v.status === 'APPROVED').length}</span>
                 </div>
                 <div className="kpi-card">
                   <div className="kpi-header"><span className="kpi-title">Active RFQs</span><Package size={16} /></div>
-                  <span className="kpi-value">{totalActiveRFQs}</span>
+                  <span className="kpi-value">{rfqs.filter(r => r.status === 'PUBLISHED').length}</span>
                 </div>
                 <div className="kpi-card">
-                  <div className="kpi-header"><span className="kpi-title">Pending PO Approval</span><DollarSign size={16} /></div>
-                  <span className="kpi-value">{totalPendingPOs}</span>
+                  <div className="kpi-header"><span className="kpi-title">Pending POs</span><DollarSign size={16} /></div>
+                  <span className="kpi-value">{pos.filter(p => p.status === 'ISSUED').length}</span>
                 </div>
               </section>
+
+              <div className="analytics-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', marginTop: '30px' }}>
+                <div className="analytics-card">
+                  <h3>Recent System Activity</h3>
+                  <div className="logs-ledger-container" style={{ maxHeight: '400px' }}>
+                    {logs.slice(0, 10).map(log => (
+                      <div key={log.id} className="log-entry-item">
+                        <Activity size={14} />
+                        <div className="log-body-content">
+                            <div><strong>{log.user?.email || 'SYSTEM'}</strong>: {log.action}</div>
+                            <div className="log-time-stamp">{new Date(log.createdAt).toLocaleString()}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="analytics-card">
+                    <h3>Infrastructure</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        <div className="infra-stat"><span>PostgreSQL Status</span><span className="status-badge status-active">Online</span></div>
+                        <div className="infra-stat"><span>Supabase Sync</span><span className="status-badge status-active">Connected</span></div>
+                        <div className="infra-stat"><span>Cloudinary API</span><span className="status-badge status-active">Active</span></div>
+                        <div className="infra-stat"><span>SMTP Relay</span><span className="status-badge status-active">Online</span></div>
+                    </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -227,21 +227,25 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
               <div className="table-actions-bar">
                 <div className="search-input-wrapper">
                   <Search size={16} />
-                  <input type="text" placeholder="Search..." value={usersSearch} onChange={(e) => setUsersSearch(e.target.value)} />
+                  <input type="text" placeholder="Search accounts..." value={usersSearch} onChange={(e) => setUsersSearch(e.target.value)} />
                 </div>
               </div>
               <div className="dashboard-table-container">
                 <table className="dashboard-table">
-                  <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+                  <thead><tr><th>Identity</th><th>Email Address</th><th>System Role</th><th>State</th><th>Action</th></tr></thead>
                   <tbody>
                     {filteredUsers.map(user => (
                       <tr key={user.id}>
-                        <td>{user.firstName} {user.lastName}</td>
+                        <td><strong>{user.firstName} {user.lastName}</strong></td>
                         <td>{user.email}</td>
-                        <td>{user.role?.name}</td>
-                        <td>{user.isActive ? 'Active' : 'Deactivated'}</td>
+                        <td><span className={`role-badge role-${user.role?.name?.toLowerCase()}`}>{user.role?.name}</span></td>
+                        <td><span className={`status-dot ${user.isActive ? 'active' : 'inactive'}`}>{user.isActive ? 'Active' : 'Locked'}</span></td>
                         <td>
-                          <button onClick={() => handleToggleUserStatus(user.id)}>Toggle</button>
+                          {user.role?.name !== 'ADMIN' && (
+                              <button className="btn-table" onClick={() => handleToggleUserStatus(user.id)}>
+                                {user.isActive ? 'Deactivate' : 'Activate'}
+                              </button>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -256,21 +260,26 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
               <div className="table-actions-bar">
                 <div className="search-input-wrapper">
                   <Search size={16} />
-                  <input type="text" placeholder="Search..." value={vendorsSearch} onChange={(e) => setVendorsSearch(e.target.value)} />
+                  <input type="text" placeholder="Search vendors..." value={vendorsSearch} onChange={(e) => setVendorsSearch(e.target.value)} />
                 </div>
               </div>
               <div className="dashboard-table-container">
                 <table className="dashboard-table">
-                  <thead><tr><th>Company</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
+                  <thead><tr><th>Company Name</th><th>GST/Tax ID</th><th>Email</th><th>Rating</th><th>Status</th><th>Actions</th></tr></thead>
                   <tbody>
                     {filteredVendors.map(vendor => (
                       <tr key={vendor.id}>
-                        <td>{vendor.companyName}</td>
+                        <td><strong>{vendor.companyName}</strong></td>
+                        <td><code>{vendor.taxId || 'N/A'}</code></td>
                         <td>{vendor.contactEmail}</td>
-                        <td>{vendor.status}</td>
+                        <td>{vendor.performanceScore}/5.0</td>
+                        <td><span className={`status-pill status-${vendor.status.toLowerCase()}`}>{vendor.status}</span></td>
                         <td>
-                          <button onClick={() => handleVendorStatusChange(vendor.id, 'APPROVED')}>Approve</button>
-                          <button onClick={() => handleVendorStatusChange(vendor.id, 'BLACKLISTED')}>Blacklist</button>
+                          <div style={{ display: 'flex', gap: '5px' }}>
+                            {vendor.status === 'PENDING' && <button className="btn-table approve" onClick={() => handleVendorStatusChange(vendor.id, 'APPROVED')}>Approve</button>}
+                            {vendor.status === 'APPROVED' && <button className="btn-table danger" onClick={() => handleVendorStatusChange(vendor.id, 'BLACKLISTED')}>Blacklist</button>}
+                            {vendor.status === 'BLACKLISTED' && <button className="btn-table approve" onClick={() => handleVendorStatusChange(vendor.id, 'APPROVED')}>Restore</button>}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -283,19 +292,25 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
           {activeTab === 'pipeline' && (
             <div className="tab-pane-fade">
               <div className="pipeline-sub-nav">
-                <button className={pipelineSubTab === 'rfqs' ? 'active' : ''} onClick={() => setPipelineSubTab('rfqs')}>RFQs</button>
-                <button className={pipelineSubTab === 'bids' ? 'active' : ''} onClick={() => setPipelineSubTab('bids')}>Bids</button>
-                <button className={pipelineSubTab === 'pos' ? 'active' : ''} onClick={() => setPipelineSubTab('pos')}>POs</button>
-                <button className={pipelineSubTab === 'invoices' ? 'active' : ''} onClick={() => setPipelineSubTab('invoices')}>Invoices</button>
+                <button className={`sub-nav-item ${pipelineSubTab === 'rfqs' ? 'active' : ''}`} onClick={() => setPipelineSubTab('rfqs')}>RFQs</button>
+                <button className={`sub-nav-item ${pipelineSubTab === 'bids' ? 'active' : ''}`} onClick={() => setPipelineSubTab('bids')}>Quotations</button>
+                <button className={`sub-nav-item ${pipelineSubTab === 'pos' ? 'active' : ''}`} onClick={() => setPipelineSubTab('pos')}>POs</button>
+                <button className={`sub-nav-item ${pipelineSubTab === 'invoices' ? 'active' : ''}`} onClick={() => setPipelineSubTab('invoices')}>Invoices</button>
               </div>
               
               <div className="dashboard-table-container">
                 <table className="dashboard-table">
+                    <thead>
+                        {pipelineSubTab === 'rfqs' && <tr><th>RFQ #</th><th>Title</th><th>Deadline</th><th>Status</th></tr>}
+                        {pipelineSubTab === 'bids' && <tr><th>Quotation ID</th><th>Vendor</th><th>Amount</th><th>Status</th></tr>}
+                        {pipelineSubTab === 'pos' && <tr><th>PO #</th><th>Vendor</th><th>Total</th><th>Status</th></tr>}
+                        {pipelineSubTab === 'invoices' && <tr><th>Invoice #</th><th>Vendor</th><th>Grand Total</th><th>Status</th></tr>}
+                    </thead>
                   <tbody>
-                    {pipelineSubTab === 'rfqs' && rfqs.map(r => <tr key={r.id}><td>{r.rfqNumber}</td><td>{r.title}</td><td>{r.status}</td></tr>)}
-                    {pipelineSubTab === 'bids' && bids.map(b => <tr key={b.id}><td>{b.vendor?.companyName}</td><td>${b.totalAmount}</td><td>{b.status}</td></tr>)}
-                    {pipelineSubTab === 'pos' && pos.map(p => <tr key={p.id}><td>{p.poNumber}</td><td>${p.totalAmount}</td><td>{p.status}</td></tr>)}
-                    {pipelineSubTab === 'invoices' && invoices.map(i => <tr key={i.id}><td>{i.invoiceNumber}</td><td>${i.grandTotal}</td><td>{i.status}</td></tr>)}
+                    {pipelineSubTab === 'rfqs' && rfqs.map(r => <tr key={r.id}><td><code>{r.rfqNumber}</code></td><td>{r.title}</td><td>{new Date(r.deadline).toLocaleDateString()}</td><td>{r.status}</td></tr>)}
+                    {pipelineSubTab === 'bids' && bids.map(b => <tr key={b.id}><td><code>{b.id.substring(0,8)}</code></td><td>{b.vendor?.companyName}</td><td>${parseFloat(b.totalAmount).toLocaleString()}</td><td>{b.status}</td></tr>)}
+                    {pipelineSubTab === 'pos' && pos.map(p => <tr key={p.id}><td><code>{p.poNumber}</code></td><td>{p.vendor?.companyName}</td><td>${parseFloat(p.totalAmount).toLocaleString()}</td><td>{p.status}</td></tr>)}
+                    {pipelineSubTab === 'invoices' && invoices.map(i => <tr key={i.id}><td><code>{i.invoiceNumber}</code></td><td>{i.vendor?.companyName}</td><td>${parseFloat(i.grandTotal).toLocaleString()}</td><td>{i.status}</td></tr>)}
                   </tbody>
                 </table>
               </div>
@@ -304,11 +319,21 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
 
           {activeTab === 'logs' && (
             <div className="tab-pane-fade">
+              <div className="table-actions-bar">
+                <div className="search-input-wrapper">
+                  <Search size={16} />
+                  <input type="text" placeholder="Search logs..." value={logsSearch} onChange={(e) => setLogsSearch(e.target.value)} />
+                </div>
+              </div>
               <div className="logs-ledger-container">
                 {filteredLogs.map(log => (
                   <div key={log.id} className="log-entry-item">
-                    <strong>{log.user?.email || 'SYSTEM'}</strong>: {log.action} - {log.description}
-                    <div className="log-time-stamp">{new Date(log.createdAt).toLocaleString()}</div>
+                    <Activity size={14} />
+                    <div className="log-body-content">
+                      <div><strong>{log.user?.email || 'SYSTEM'}</strong> &mdash; {log.action}</div>
+                      <div className="subtext-mute">{log.description}</div>
+                      <div className="log-time-stamp">{new Date(log.createdAt).toLocaleString()}</div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -316,6 +341,17 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
           )}
         </div>
       </main>
+      <style>{`
+        .infra-stat { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid var(--border-color); font-size: 0.85rem; }
+        .btn-table { padding: 5px 12px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-color); color: var(--text-primary); cursor: pointer; font-size: 0.75rem; transition: 0.2s; }
+        .btn-table:hover { background: var(--accent-color); color: #fff; }
+        .btn-table.approve:hover { background: var(--success-color); border-color: var(--success-color); }
+        .btn-table.danger:hover { background: var(--error-color); border-color: var(--error-color); }
+        .role-badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; background: rgba(0,0,0,0.05); text-transform: uppercase; font-weight: bold; }
+        .status-pill { font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; font-weight: bold; }
+        .status-approved { background: rgba(34, 197, 94, 0.1); color: var(--success-color); }
+        .status-pending { background: rgba(249, 115, 22, 0.1); color: var(--orange); }
+      `}</style>
     </div>
   )
 }

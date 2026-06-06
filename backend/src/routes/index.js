@@ -11,6 +11,7 @@ const emailLogRoutes = require('./emailLog.routes');
 const shipmentRoutes = require('./shipment.routes');
 const userRoutes = require('./user.routes');
 const activityLogRoutes = require('./activityLog.routes');
+const chatRoutes = require('./chat.routes');
 
 const router = express.Router();
 
@@ -28,5 +29,6 @@ router.use('/email-logs', emailLogRoutes);
 router.use('/shipments', shipmentRoutes);
 router.use('/users', userRoutes);
 router.use('/activity-logs', activityLogRoutes);
+router.use('/chat', chatRoutes);
 
 module.exports = router;

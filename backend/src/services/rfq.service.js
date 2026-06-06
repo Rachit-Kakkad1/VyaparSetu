@@ -67,6 +67,19 @@ class RfqService {
 
   async getAllRfqs() {
     return await Rfq.findAll({
+      include: [
+        { model: RfqItem, as: 'items' },
+        { 
+            model: Quotation, 
+            as: 'quotations', 
+            include: [{ model: Vendor, as: 'vendor' }] 
+        },
+        { 
+            model: RfqVendor, 
+            as: 'assignedVendors', 
+            include: [{ model: Vendor, as: 'vendor' }] 
+        }
+      ],
       order: [['createdAt', 'DESC']]
     });
   }
