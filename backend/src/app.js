@@ -2,7 +2,6 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
-const xss = require('xss-clean');
 const { errorMiddleware } = require('./middlewares/error.middleware');
 const routes = require('./routes');
 require('dotenv').config();
@@ -12,7 +11,6 @@ const app = express();
 // Security Middlewares
 app.use(helmet());
 app.use(cors({ origin: true, credentials: true })); // Adjust for production
-app.use(xss());
 
 // Rate Limiting
 const limiter = rateLimit({

@@ -30,13 +30,15 @@ class ApprovalService {
       if (approvers && approvers.length > 0) {
         const firstApprover = approvers.find(a => a.stepOrder === 1);
         if (firstApprover) {
-           await notificationService.createNotification(firstApprover.approverId, 'Approval Required', 'A new quotation requires your approval.', 'APPROVAL_REQUEST', `/approvals/${workflow.id}`);
+           await notificationService.createNotification(firstApprover.approverId, 'Approval Required', 'A new quotation requires your approval.', 'APPROVAL_REQUEST', '/approvals/' + workflow.id);
         }
       }
       
       await logActivity(initiatorId, 'INITIATE_APPROVAL', 'ApprovalWorkflow', workflow.id, 'Initiated approval workflow for quotation');
       
-      return workflow;
+      return await ApprovalWorkflow.findByPk(workflow.id, {
+        include: [{ model: ApprovalStep, as: 'steps' }]
+      });
     } catch (error) {
       await t.rollback();
       throw error;

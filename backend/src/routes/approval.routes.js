@@ -6,6 +6,8 @@ const router = express.Router();
 
 router.use(protect);
 
+router.post('/', restrictTo('ADMIN', 'PROCUREMENT_OFFICER'), approvalController.initiateApproval);
+
 router.put('/:id/approve', restrictTo('MANAGER', 'ADMIN', 'PROCUREMENT_OFFICER'), (req, res, next) => {
   req.body.status = 'APPROVED';
   approvalController.processApproval(req, res, next);
