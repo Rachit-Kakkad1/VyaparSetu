@@ -1,5 +1,8 @@
 const { Rfq, RfqItem, RfqVendor, Vendor, User, sequelize } = require('../models');
 const AppError = require('../utils/AppError');
+const emailService = require('./email.service');
+const notificationService = require('./notification.service');
+const { logActivity } = require('../utils/logger');
 
 class RfqService {
   async createRfq(data, userId) {
@@ -9,7 +12,7 @@ class RfqService {
       
       const rfq = await Rfq.create({
         ...rfqData,
-        rfqNumber: `RFQ-${Date.now()}`, // Simplified number generation
+        rfqNumber: 'RFQ-' + Date.now(), 
         createdBy: userId
       }, { transaction: t });
 
@@ -24,7 +27,26 @@ class RfqService {
       }
 
       await t.commit();
-      return this.getRfqById(rfq.id);
+      
+      const createdRfq = await this.getRfqById(rfq.id);
+      
+      // Async: Send emails to assigned vendors
+      if (vendorIds && vendorIds.length > 0) {
+        (async () => {
+          for (const rv of createdRfq.assignedVendors) {
+            try {
+              await emailService.sendRFQAssignedEmail(rv.vendor, createdRfq, userId, null);
+              await notificationService.createNotification(rv.vendorId, 'New RFQ Assigned', 'You have been assigned to RFQ ' + createdRfq.rfqNumber, 'RFQ_ASSIGNED', '/rfqs/' + createdRfq.id);
+            } catch (err) {
+              console.error('Failed to notify vendor:', rv.vendorId, err.message);
+            }
+          }
+        })();
+      }
+
+      await logActivity(userId, 'CREATE_RFQ', 'RFQ', rfq.id, 'Created RFQ ' + rfq.rfqNumber, null);
+
+      return createdRfq;
     } catch (error) {
       await t.rollback();
       throw error;

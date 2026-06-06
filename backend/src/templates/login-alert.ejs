@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: sans-serif; color: #333; }
+        .container { border: 2px solid #dc3545; border-radius: 8px; max-width: 500px; margin: auto; overflow: hidden; }
+        .header { background: #dc3545; color: white; padding: 15px; text-align: center; }
+        .content { padding: 20px; }
+        .details { background: #f8d7da; padding: 10px; border-radius: 4px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header"><h2>Security Alert: New Login</h2></div>
+        <div class="content">
+            <p>A new login was detected for your account <strong><%= email %></strong>.</p>
+            <div class="details">
+                Time: <%= loginTime %><br>
+                IP: <%= ipAddress %><br>
+                Browser: <%= browser %><br>
+                Platform: <%= platform %>
+            </div>
+            <p style="color: #721c24;">If this wasn't you, please reset your password immediately and contact IT support.</p>
+        </div>
+    </div>
+</body>
+</html>

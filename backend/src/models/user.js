@@ -21,6 +21,7 @@ module.exports = (sequelize, DataTypes) => {
 
   User.associate = function(models) {
     User.belongsTo(models.Role, { foreignKey: 'roleId', as: 'role' });
+    User.hasMany(models.EmailLog, { foreignKey: 'sentBy', as: 'emailsSent' });
   };
 
   User.beforeSave(async (user, options) => {

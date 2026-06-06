@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <div style="font-family: Arial; max-width: 600px; border: 1px solid #eee; padding: 20px;">
+        <h2 style="color: #6f42c1;">Approval Required: <%= rfqNumber %></h2>
+        <p>Hello Manager,</p>
+        <p>A new quotation requires your approval to proceed to Purchase Order generation.</p>
+        <div style="background: #f3f4f6; padding: 15px; border-radius: 8px;">
+            <p><strong>RFQ:</strong> <%= rfqNumber %></p>
+            <p><strong>Vendor:</strong> <%= vendorName %></p>
+            <p><strong>Quotation Value:</strong> <%= totalAmount %></p>
+            <p><strong>Recommendation:</strong> <%= recommendation %></p>
+        </div>
+        <p>Please review and take action.</p>
+        <a href="<%= approvalUrl %>" style="background: #6f42c1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; display: inline-block; margin-top: 15px;">Review Approval</a>
+    </div>
+</body>
+</html>

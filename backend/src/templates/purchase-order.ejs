@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <div style="font-family: Arial; max-width: 600px; border: 1px solid #007bff; padding: 20px;">
+        <h2 style="color: #007bff;">Purchase Order Issued: <%= poNumber %></h2>
+        <p>Hello <%= vendorName %>,</p>
+        <p>We are pleased to issue the following Purchase Order based on your quotation.</p>
+        <div style="background: #e7f3ff; padding: 15px; border-radius: 8px;">
+            <p><strong>PO Number:</strong> <%= poNumber %></p>
+            <p><strong>Total Amount:</strong> <%= totalAmount %></p>
+        </div>
+        <p>The formal Purchase Order document is attached to this email.</p>
+        <p>Please acknowledge receipt and proceed with fulfillment.</p>
+    </div>
+</body>
+</html>
