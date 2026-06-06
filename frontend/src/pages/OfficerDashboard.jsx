@@ -23,7 +23,7 @@ function OfficerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
     try {
       const token = localStorage.getItem('accessToken');
       const headers = { Authorization: 'Bearer ' + token };
-      const baseUrl = 'http://localhost:5000/api';
+      const baseUrl = 'https://vyaparsetu-f6yi.onrender.com/api';
 
       const [rRes, vRes] = await Promise.all([
         fetch(baseUrl + '/rfqs', { headers }),
@@ -47,7 +47,7 @@ function OfficerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
     e.preventDefault();
     try {
       const token = localStorage.getItem('accessToken');
-      const res = await fetch('http://localhost:5000/api/rfqs', {
+      const res = await fetch('https://vyaparsetu-f6yi.onrender.com/api/rfqs', {
         method: 'POST',
         headers: { 
             'Content-Type': 'application/json',
