@@ -30,6 +30,15 @@ class QuotationController {
       next(error);
     }
   }
+
+  async getAllQuotations(req, res, next) {
+    try {
+      const quotations = await quotationService.getAllQuotations();
+      ApiResponse.success(res, 'Quotations retrieved successfully', { quotations });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new QuotationController();

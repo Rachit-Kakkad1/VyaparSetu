@@ -28,7 +28,7 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
   const [shipmentSearch, setShipmentSearch] = useState('')
   const [shipmentStatusFilter, setShipmentStatusFilter] = useState('All')
 
-  // Real-time long-polling simulation fallback + API Sync
+  // Real-time API Sync
   const fetchShipmentData = async () => {
     try {
       const token = localStorage.getItem('accessToken') || '';
@@ -45,133 +45,12 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
           const sumData = await sumRes.json();
           setLogisticsSummary(sumData.data.summary);
         }
-      } else {
-        throw new Error('API offline/unauthorized, loading client simulation');
       }
     } catch (err) {
-      setShipments(prev => {
-        if (prev.length === 0) {
-          return [
-            {
-              id: 'shp-1',
-              shipmentNumber: 'SHP-983021',
-              vendor: { companyName: 'Global Parts Co.' },
-              purchaseOrder: { poNumber: 'PO-2026-08' },
-              status: 'In Transit',
-              originAddress: 'Mumbai Port Trust, Mumbai, MH',
-              destinationAddress: 'VyaparSetu Pune Warehousing Corp, Pune, MH',
-              originLat: 19.0760,
-              originLng: 72.8777,
-              destinationLat: 18.5204,
-              destinationLng: 73.8567,
-              currentLat: 18.8800,
-              currentLng: 73.2200,
-              progressPercentage: 45,
-              remainingDistance: 82.5,
-              estimatedArrival: new Date(Date.now() + 65 * 60 * 1000).toISOString(),
-              isDelivered: false
-            },
-            {
-              id: 'shp-2',
-              shipmentNumber: 'SHP-482012',
-              vendor: { companyName: 'Acme Supplies Ltd' },
-              purchaseOrder: { poNumber: 'PO-2026-12' },
-              status: 'Out for Delivery',
-              originAddress: 'Okhla Industrial Area, New Delhi, DL',
-              destinationAddress: 'VyaparSetu Jaipur Fulfillment Center, Jaipur, RJ',
-              originLat: 28.6139,
-              originLng: 77.2090,
-              destinationLat: 26.9124,
-              destinationLng: 75.7873,
-              currentLat: 27.1000,
-              currentLng: 75.9200,
-              progressPercentage: 88,
-              remainingDistance: 32.4,
-              estimatedArrival: new Date(Date.now() + 18 * 60 * 1000).toISOString(),
-              isDelivered: false
-            },
-            {
-              id: 'shp-3',
-              shipmentNumber: 'SHP-772910',
-              vendor: { companyName: 'SteelCorp Industries' },
-              purchaseOrder: { poNumber: 'PO-2026-15' },
-              status: 'Arrived',
-              originAddress: 'Peenya Industrial Area, Bengaluru, KA',
-              destinationAddress: 'VyaparSetu Chennai Port Warehouse, Chennai, TN',
-              originLat: 12.9716,
-              originLng: 77.5946,
-              destinationLat: 13.0827,
-              destinationLng: 80.2707,
-              currentLat: 13.0827,
-              currentLng: 80.2707,
-              progressPercentage: 100,
-              remainingDistance: 0.0,
-              estimatedArrival: new Date().toISOString(),
-              isDelivered: false
-            }
-          ];
-        } else {
-          return prev.map(s => {
-            if (s.isDelivered || s.status === 'Arrived') return s;
-
-            let nextProgress = s.progressPercentage + 5;
-            if (nextProgress > 100) nextProgress = 100;
-
-            const fraction = nextProgress / 100;
-            const currentLat = s.originLat + (s.destinationLat - s.originLat) * fraction;
-            const currentLng = s.originLng + (s.destinationLng - s.originLng) * fraction;
-
-            const remainingMinutes = Math.max(0, Math.round(120 * (1 - fraction)));
-            const remainingDistance = parseFloat((150 * (1 - fraction)).toFixed(1));
-
-            let newStatus = s.status;
-            if (nextProgress === 100) newStatus = 'Arrived';
-            else if (nextProgress >= 80) newStatus = 'Out for Delivery';
-            else newStatus = 'In Transit';
-
-            if (nextProgress === 50 && !s.alert50) {
-              s.alert50 = true;
-              triggerWebAlert(s.shipmentNumber, 'completed 50% of its route.');
-            }
-            if (nextProgress === 75 && !s.alert75) {
-              s.alert75 = true;
-              triggerWebAlert(s.shipmentNumber, 'completed 75% of its route.');
-            }
-            if (remainingMinutes <= 10 && remainingMinutes > 0 && !s.alert10) {
-              s.alert10 = true;
-              triggerWebAlert(s.shipmentNumber, 'is arriving within 10 minutes! Prepare receiving docks.', true);
-            }
-            if (nextProgress === 100 && !s.alertArrived) {
-              s.alertArrived = true;
-              triggerWebAlert(s.shipmentNumber, 'has arrived at the unloading dock.', false);
-            }
-
-            return {
-              ...s,
-              progressPercentage: nextProgress,
-              currentLat,
-              currentLng,
-              remainingDistance,
-              estimatedArrival: new Date(Date.now() + remainingMinutes * 60 * 1000).toISOString(),
-              status: newStatus
-            };
-          });
-        }
-      });
+      console.error('API Sync Error:', err);
     } finally {
       setLoadingLogistics(false);
     }
-  };
-
-  const triggerWebAlert = (shpNo, text, critical = false) => {
-    const newAlert = {
-      id: Date.now() + Math.random(),
-      text: `Alert [${shpNo}]: ${text}`,
-      date: 'Just now',
-      read: false,
-      critical
-    };
-    setNotifications(prev => [newAlert, ...prev]);
   };
 
   useEffect(() => {
@@ -185,41 +64,6 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
       const updated = shipments.find(s => s.id === selectedShipment.id);
       if (updated) setSelectedShipment(updated);
     }
-  }, [shipments]);
-
-  useEffect(() => {
-    const active = shipments.filter(s => s.status !== 'Delivered' && s.status !== 'Arrived').length;
-    let arr20 = 0;
-    let arr10 = 0;
-    let delayed = 0;
-    let totalEta = 0;
-    let etaCount = 0;
-
-    shipments.forEach(s => {
-      if (s.status !== 'Delivered' && s.status !== 'Arrived') {
-        const remainingMs = new Date(s.estimatedArrival) - new Date();
-        const remMin = Math.max(0, Math.round(remainingMs / 60000));
-
-        if (remMin <= 20) arr20++;
-        if (remMin <= 10) arr10++;
-        if (new Date(s.estimatedArrival) < new Date()) delayed++;
-
-        totalEta += remMin;
-        etaCount++;
-      }
-    });
-
-    const deliveredCount = shipments.filter(s => s.status === 'Delivered').length;
-    const avgEta = etaCount > 0 ? Math.round(totalEta / etaCount) : 0;
-
-    setLogisticsSummary({
-      activeShipments: active,
-      arrivingWithin20: arr20,
-      arrivingWithin10: arr10,
-      deliveredToday: deliveredCount,
-      delayedShipments: delayed,
-      averageEtaMinutes: avgEta
-    });
   }, [shipments]);
 
   const handleConfirmDelivery = async (e) => {
@@ -300,129 +144,117 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
   const [showProfileModal, setShowProfileModal] = useState(false)
 
   // Notifications
-  const [notifications, setNotifications] = useState([
-    { id: 1, text: 'Officer Rohan Sharma requested list: 50 Laptops and 50 Mobiles. Vendors notified!', date: 'Just now', read: false },
-    { id: 2, text: 'New Quotation uploaded by Acme Supplies Ltd for 50 Mobiles.', date: '10 mins ago', read: false },
-    { id: 3, text: 'PO-2026-08 successfully accepted by vendor.', date: '2 hours ago', read: true }
-  ])
+  const [notifications, setNotifications] = useState([])
 
-  // Mock Database 1: Published RFQs with detailed warranty/terms
-  const [publishedRfqs, setPublishedRfqs] = useState([
-    {
-      id: 'REQ-2026-101',
-      title: 'Procurement of 50 Laptops',
-      status: 'Published to Vendors',
-      bids: [
-        { vendor: 'Vendor A (Acme Supplies)', price: 2400000, delivery: '7 days', rating: 4.5, terms: 'Includes 3 years onsite hardware replacement, express setup, and dedicated technical helpdesk.', status: 'Pending Review' },
-        { vendor: 'Vendor B (Global Parts)', price: 2350000, delivery: '10 days', rating: 4.8, terms: 'Includes 1 year standard warranty, spare battery pack, and bulk volume discounts on next order.', status: 'Pending Review' },
-        { vendor: 'Vendor C (SteelCorp)', price: 2600000, delivery: '5 days', rating: 4.2, terms: 'Includes 5 years manufacturer parts warranty and free door-to-door shipping.', status: 'Pending Review' }
-      ]
-    },
-    {
-      id: 'REQ-2026-102',
-      title: 'Procurement of 50 Mobiles',
-      status: 'Published to Vendors',
-      bids: [
-        { vendor: 'Vendor A (Acme Supplies)', price: 1000000, delivery: '7 days', rating: 4.5, terms: 'Includes 2 years insurance, phone screen guard, and protective rugged back covers.', status: 'Pending Review' },
-        { vendor: 'Vendor C (SteelCorp)', price: 1100000, delivery: '5 days', rating: 4.2, terms: 'Includes 1 year damage protection warranty and express air cargo courier delivery.', status: 'Pending Review' }
-      ]
-    }
-  ])
+  // Database 1: Published RFQs with detailed warranty/terms
+  const [publishedRfqs, setPublishedRfqs] = useState([])
 
-  // Mock Database 2: Discussion Histories keyed by 'rfqId-vendorName'
-  const [chatHistories, setChatHistories] = useState({
-    'REQ-2026-101-Vendor A (Acme Supplies)': [
-      { sender: 'vendor', text: 'Greetings, we can offer bulk warranty extension for 3 years at this price.', timestamp: '11:15 AM' },
-      { sender: 'manager', text: 'Can you match the pricing structure of Vendor B at ₹23,50,000?', timestamp: '11:20 AM' },
-      { sender: 'vendor', text: 'We can lower it to ₹23,80,000 if PO is generated today.', timestamp: '11:22 AM' }
-    ],
-    'REQ-2026-101-Vendor B (Global Parts)': [
-      { sender: 'vendor', text: 'We have laptops in stock and can deliver within 10 days.', timestamp: '10:45 AM' },
-      { sender: 'manager', text: 'Excellent. Is there any additional discount for direct bank transfer?', timestamp: '10:50 AM' }
-    ]
-  })
+  // Database 2: Discussion Histories keyed by 'rfqId-vendorName'
+  const [chatHistories, setChatHistories] = useState({})
 
-  // Mock Database 3: Historical approvals
-  const [decidedRequests, setDecidedRequests] = useState([
-    { id: 'REQ-2026-098', title: 'Procurement of Brass Valves', vendor: 'SteelCorp Industries', decision: 'Approved', remarks: 'Approved due to lowest total cost.', date: '2026-05-30' },
-    { id: 'REQ-2026-099', title: 'IT Workspace Upgrade Accessories', vendor: 'Acme Supplies Ltd', decision: 'Rejected', remarks: 'Rejected due to late delivery timeline.', date: '2026-06-02' }
-  ])
+  // Database 3: Historical approvals
+  const [decidedRequests, setDecidedRequests] = useState([])
 
   // Vendor profiles
-  const [vendorsList, setVendorsList] = useState([
-    { name: 'Acme Supplies Ltd', rating: 4.5, pastOrders: 24, deliveryPerf: 'Excellent', lastOrder: '2026-06-01' },
-    { name: 'Global Parts Co.', rating: 4.8, pastOrders: 42, deliveryPerf: 'Outstanding', lastOrder: '2026-05-28' },
-    { name: 'SteelCorp Industries', rating: 4.2, pastOrders: 15, deliveryPerf: 'Good', lastOrder: '2026-05-25' }
-  ])
+  const [vendorsList, setVendorsList] = useState([])
+
+  const fetchData = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const headers = { Authorization: 'Bearer ' + token };
+      const baseUrl = 'http://localhost:5000/api';
+
+      const [rRes, vRes, nRes] = await Promise.all([
+        fetch(baseUrl + '/rfqs', { headers }),
+        fetch(baseUrl + '/vendors', { headers }),
+        fetch(baseUrl + '/notifications', { headers })
+      ]);
+
+      const [rData, vData, nData] = await Promise.all([
+        rRes.json(), vRes.json(), nRes.json()
+      ]);
+
+      if (rRes.ok) {
+        const allRfqs = rData.data.rfqs || rData.data || [];
+        setPublishedRfqs(allRfqs.filter(r => r.status === 'PUBLISHED'));
+        setDecidedRequests(allRfqs.filter(r => r.status === 'CLOSED' || r.status === 'CANCELLED'));
+      }
+      if (vRes.ok) setVendorsList(vData.data.rows || vData.data || []);
+      if (nRes.ok) setNotifications(nData.data.notifications || []);
+    } catch (error) {
+      console.error('Error fetching manager data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+    const interval = setInterval(fetchData, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Quotation Decisions (Approve/Reject specific vendor quotation)
-  const handleApproveQuotation = (e) => {
+  const handleApproveQuotation = async (e) => {
     e.preventDefault()
     if (!selectedBid) return
 
-    const decisionLog = {
-      id: selectedBid.rfqId,
-      title: selectedBid.title,
-      vendor: selectedBid.vendorName,
-      decision: 'Approved',
-      remarks: remarks || 'Approved due to optimal pricing and specifications.',
-      date: new Date().toISOString().split('T')[0]
+    try {
+        const token = localStorage.getItem('accessToken');
+        const baseUrl = 'http://localhost:5000/api';
+        
+        // Find the step ID for this quotation approval
+        const res = await fetch(`${baseUrl}/approvals/${selectedBid.quotationId}/approve`, {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token 
+            },
+            body: JSON.stringify({ remarks })
+        });
+
+        if (res.ok) {
+            alert('Quotation APPROVED successfully.');
+            fetchData();
+        } else {
+            const errData = await res.json();
+            alert('Approval failed: ' + errData.message);
+        }
+    } catch (err) {
+        console.error(err);
+    } finally {
+        setShowApprovalModal(false)
+        setSelectedBid(null)
+        setRemarks('')
     }
-
-    setDecidedRequests(prev => [decisionLog, ...prev])
-
-    // Remove this RFQ from active list since it is decided
-    setPublishedRfqs(prev => prev.filter(r => r.id !== selectedBid.rfqId))
-    setFullScreenRfq(null) // clear fullscreen modal if it was open
-
-    setShowApprovalModal(false)
-    setSelectedBid(null)
-    setRemarks('')
-
-    alert(`Quotation from ${decisionLog.vendor} APPROVED. PO Generation enabled.`);
   }
 
-  const handleRejectQuotation = (e) => {
+  const handleRejectQuotation = async (e) => {
     e.preventDefault()
     if (!selectedBid) return
 
-    const decisionLog = {
-      id: selectedBid.rfqId,
-      title: selectedBid.title,
-      vendor: selectedBid.vendorName,
-      decision: 'Rejected',
-      remarks: `Rejected: ${rejectReason}. Details: ${remarks}`,
-      date: new Date().toISOString().split('T')[0]
-    }
+    try {
+        const token = localStorage.getItem('accessToken');
+        const baseUrl = 'http://localhost:5000/api';
+        
+        const res = await fetch(`${baseUrl}/approvals/${selectedBid.quotationId}/reject`, {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token 
+            },
+            body: JSON.stringify({ remarks: `Reason: ${rejectReason}. ${remarks}` })
+        });
 
-    setDecidedRequests(prev => [decisionLog, ...prev])
-
-    // Remove this vendor bid from active bids for this RFQ
-    setPublishedRfqs(prev => prev.map(rfq => {
-      if (rfq.id === selectedBid.rfqId) {
-        return {
-          ...rfq,
-          bids: rfq.bids.filter(b => b.vendor !== selectedBid.vendorName)
+        if (res.ok) {
+            alert('Quotation REJECTED.');
+            fetchData();
         }
-      }
-      return rfq
-    }))
-
-    // Update full screen state bids list
-    setFullScreenRfq(prev => {
-      if (prev && prev.id === selectedBid.rfqId) {
-        const remaining = prev.bids.filter(b => b.vendor !== selectedBid.vendorName);
-        if (remaining.length === 0) return null; // close fullscreen if no bids left
-        return { ...prev, bids: remaining };
-      }
-      return prev;
-    })
-
-    setShowRejectionModal(false)
-    setSelectedBid(null)
-    setRemarks('')
-
-    alert(`Quotation from ${decisionLog.vendor} REJECTED.`);
+    } catch (err) {
+        console.error(err);
+    } finally {
+        setShowRejectionModal(false)
+        setSelectedBid(null)
+        setRemarks('')
+    }
   }
 
   // Interactive Discussion Negotiator
@@ -1160,10 +992,10 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
                                   <td style={{ padding: '15px' }}>
                                     <div style={{ fontSize: '0.85rem', color: 'var(--l-text)' }}>
                                       <MapPin size={12} style={{ color: 'var(--l-cyan)', marginRight: '4px', verticalAlign: 'middle' }} />
-                                      {s.originAddress.split(',')[0]} &rarr; {s.destinationAddress.split(',')[0]}
+                                      {s.originAddress ? s.originAddress.split(',')[0] : `Loc (${s.originLat.toFixed(2)}, ${s.originLng.toFixed(2)})`} &rarr; {s.destinationAddress ? s.destinationAddress.split(',')[0] : `Loc (${s.destinationLat.toFixed(2)}, ${s.destinationLng.toFixed(2)})`}
                                     </div>
                                     <div style={{ fontSize: '0.75rem', color: 'var(--l-text-mute)', marginTop: '2px' }}>
-                                      Remaining: {s.remainingDistance} km
+                                      Progress: {s.progressPercentage}%
                                     </div>
                                   </td>
                                   <td style={{ padding: '15px', width: '200px' }}>

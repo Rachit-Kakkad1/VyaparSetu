@@ -11,14 +11,41 @@ function SignUpPage({ onNavigate }) {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
 
-  const handleSignUp = (e) => {
+  const handleSignUp = async (e) => {
     e.preventDefault()
     if (password !== confirmPassword) {
       alert('Passwords do not match!')
       return
     }
-    alert(`Vendor account created for: ${firstName} ${lastName} (${companyName})`)
-    onNavigate('login')
+    
+    try {
+        const response = await fetch('http://localhost:5000/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                firstName,
+                lastName,
+                email,
+                password,
+                companyName,
+                roleName: 'VENDOR',
+                phone,
+                taxId: gst
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            alert('Vendor account created successfully! Please sign in.');
+            onNavigate('login');
+        } else {
+            alert(data.message || 'Registration failed');
+        }
+    } catch (error) {
+        console.error('Signup Error:', error);
+        alert('Could not connect to registration server.');
+    }
   }
 
   return (

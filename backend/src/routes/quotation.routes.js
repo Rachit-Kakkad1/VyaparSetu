@@ -9,6 +9,7 @@ const router = express.Router();
 
 router.use(protect);
 
+router.get('/', restrictTo('ADMIN', 'PROCUREMENT_OFFICER'), quotationController.getAllQuotations);
 router.post('/', 
   restrictTo('VENDOR'),
   upload.array('documents', 5),

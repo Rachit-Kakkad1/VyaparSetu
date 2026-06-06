@@ -68,6 +68,16 @@ class QuotationService {
       order: [['totalAmount', 'ASC']] // Simple comparison logic (lowest price first)
     });
   }
+
+  async getAllQuotations() {
+    return await Quotation.findAll({
+      include: [
+        { model: Vendor, as: 'vendor' },
+        { model: Rfq, as: 'rfq' }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+  }
 }
 
 module.exports = new QuotationService();
