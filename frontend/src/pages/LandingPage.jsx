@@ -17,6 +17,7 @@ import {
   ExternalLink,
   ArrowRight
 } from 'lucide-react'
+import ParticleBackground from '../components/ParticleBackground'
 
 function LandingPage({ darkMode, toggleDarkMode, onNavigate }) {
   // Live bid mockup interactive state
@@ -25,6 +26,44 @@ function LandingPage({ darkMode, toggleDarkMode, onNavigate }) {
   // Interactive Roles state
   const [activeTab, setActiveTab] = useState('officer')
   const [isHovered, setIsHovered] = useState(false)
+
+  // Typing Effect State
+  const [typedText, setTypedText] = useState('')
+  const [typingIndex, setTypingIndex] = useState(0)
+  const [isDeleting, setIsDeleting] = useState(false)
+  
+  const typingWords = [
+    'Streamline Vendor Relations.',
+    'Automate Purchase Orders.',
+    'Optimize Bid Matrix.',
+    'Govern Procurement Flows.'
+  ]
+
+  useEffect(() => {
+    const currentWord = typingWords[typingIndex]
+    
+    const timeout = setTimeout(() => {
+      if (!isDeleting) {
+        setTypedText(currentWord.substring(0, typedText.length + 1))
+        
+        if (typedText.length === currentWord.length) {
+          // Pause at end of word
+          setTimeout(() => setIsDeleting(true), 2000)
+          return
+        }
+      } else {
+        setTypedText(currentWord.substring(0, typedText.length - 1))
+        
+        if (typedText.length === 0) {
+          setIsDeleting(false)
+          setTypingIndex((prev) => (prev + 1) % typingWords.length)
+          return
+        }
+      }
+    }, isDeleting ? 30 : 70)
+    
+    return () => clearTimeout(timeout)
+  }, [typedText, isDeleting, typingIndex])
 
   const roles = ['officer', 'vendor', 'manager', 'admin']
 
@@ -136,13 +175,15 @@ function LandingPage({ darkMode, toggleDarkMode, onNavigate }) {
   }
 
   return (
-    <div className="landing-wrapper">
-      {/* Navigation Header */}
-      <header className="navbar">
+    <div className="landing-wrapper" style={{ position: 'relative', overflow: 'hidden' }}>
+      <ParticleBackground />
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        {/* Navigation Header */}
+        <header className="navbar">
         <div className="container">
           <a href="#" className="logo">
             <img src="/images/logo_vyapar.png" alt="VB" className="logo-icon" style={{ background: 'transparent', padding: 0, width: '64px', height: 'auto' }} />
-            VendorBridge
+            VyaparSetu
           </a>
           <nav>
             <ul className="nav-links">
@@ -169,10 +210,10 @@ function LandingPage({ darkMode, toggleDarkMode, onNavigate }) {
             <div className="hero-tag">Unified Procurement ERP</div>
             <h1 className="hero-title">
               Simplify Procurement. <br />
-              <span>Streamline Vendor Relations.</span>
+              <span>{typedText}<span className="typing-cursor">|</span></span>
             </h1>
             <p className="hero-subtitle">
-              VendorBridge is a modern, role-based MERN platform built for organizational efficiency.
+              VyaparSetu is a modern, role-based MERN platform built for organizational efficiency.
               Digitize your entire flow from Request for Quotations (RFQs), live bid comparisons, and
               approvals to automated purchase orders and invoices.
             </p>
@@ -369,7 +410,7 @@ function LandingPage({ darkMode, toggleDarkMode, onNavigate }) {
             <span className="section-subtitle">Tailored Workspace Views</span>
             <h2 className="section-title">Designed for Collaboration</h2>
             <p className="section-desc">
-              VendorBridge is designed around role security, giving each stakeholder a workspace tailored to their exact activities.
+              VyaparSetu is designed around role security, giving each stakeholder a workspace tailored to their exact activities.
             </p>
           </div>
 
@@ -438,7 +479,7 @@ function LandingPage({ darkMode, toggleDarkMode, onNavigate }) {
                     <span className="dot dot-green"></span>
                   </div>
                   <div className="window-address-bar">
-                    vendorbridge.erp/{activeTab}_workspace
+                    vyaparsetu.erp/{activeTab}_workspace
                   </div>
                 </div>
                 <div className="role-mockup-frame">
@@ -482,7 +523,7 @@ function LandingPage({ darkMode, toggleDarkMode, onNavigate }) {
         <div className="cta-banner">
           <h2 className="cta-title">Upgrade Your Supply Chain Operations</h2>
           <p className="cta-desc">
-            Stop relying on scattered email threads and manual Excel spreadsheets. Launch VendorBridge and establish transparency, auditability, and speed.
+            Stop relying on scattered email threads and manual Excel spreadsheets. Launch VyaparSetu and establish transparency, auditability, and speed.
           </p>
           <div style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
             <button className="btn btn-primary" style={{ backgroundColor: 'var(--bg-color)', color: 'var(--text-color)' }} onClick={() => onNavigate('signup')}>
@@ -500,7 +541,7 @@ function LandingPage({ darkMode, toggleDarkMode, onNavigate }) {
             <div className="footer-col">
               <a href="#" className="logo" style={{ border: 'none', padding: 0 }}>
                 <img src="/images/logo_vyapar.png" alt="VB" className="logo-icon" style={{ background: 'transparent', padding: 0, width: '64px', height: 'auto' }} />
-                VendorBridge
+                VyaparSetu
               </a>
               <p className="footer-about" style={{ marginTop: '10px' }}>
                 Secure, auditable and highly scalable MERN ERP for organizations to govern supplier pipelines,
@@ -536,7 +577,7 @@ function LandingPage({ darkMode, toggleDarkMode, onNavigate }) {
           </div>
 
           <div className="footer-bottom">
-            <span>© {new Date().getFullYear()} VendorBridge ERP. All rights reserved.</span>
+            <span>© {new Date().getFullYear()} VyaparSetu ERP. All rights reserved.</span>
             <span style={{ display: 'flex', gap: '15px' }}>
               <a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy</a>
               <a href="#" style={{ color: 'inherit', textDecoration: 'none' }}>Terms</a>
@@ -544,6 +585,7 @@ function LandingPage({ darkMode, toggleDarkMode, onNavigate }) {
           </div>
         </div>
       </footer>
+      </div>
     </div>
   )
 }

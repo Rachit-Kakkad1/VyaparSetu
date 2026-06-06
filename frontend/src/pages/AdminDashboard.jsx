@@ -24,24 +24,24 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
   
   // Mock Databases (State-based so user changes are reactive)
   const [users, setUsers] = useState([
-    { id: 1, name: 'Admin Account', email: 'admin@vendorbridge.com', role: 'admin', status: 'Active', created: '2026-05-10' },
-    { id: 2, name: 'Rohan Sharma', email: 'officer@vendorbridge.com', role: 'officer', status: 'Active', created: '2026-05-12' },
-    { id: 3, name: 'Sarah Jenkins', email: 'manager@vendorbridge.com', role: 'manager', status: 'Active', created: '2026-05-15' },
-    { id: 4, name: 'Vikram Patel', email: 'officer2@vendorbridge.com', role: 'officer', status: 'Active', created: '2026-05-20' },
-    { id: 5, name: 'Ananya Roy', email: 'manager2@vendorbridge.com', role: 'manager', status: 'Deactivated', created: '2026-05-22' }
+    { id: 1, name: 'Admin Account', email: 'admin@vyaparsetu.com', role: 'admin', status: 'Active', created: '2026-05-10' },
+    { id: 2, name: 'Rohan Sharma', email: 'officer@vyaparsetu.com', role: 'officer', status: 'Active', created: '2026-05-12' },
+    { id: 3, name: 'Sarah Jenkins', email: 'manager@vyaparsetu.com', role: 'manager', status: 'Active', created: '2026-05-15' },
+    { id: 4, name: 'Vikram Patel', email: 'officer2@vyaparsetu.com', role: 'officer', status: 'Active', created: '2026-05-20' },
+    { id: 5, name: 'Ananya Roy', email: 'manager2@vyaparsetu.com', role: 'manager', status: 'Deactivated', created: '2026-05-22' }
   ])
 
   const [vendors, setVendors] = useState([
-    { id: 1, company: 'Acme Supplies Ltd', contact: 'John Doe', email: 'vendor@vendorbridge.com', phone: '+91 98765 43210', gst: '27ABCDE1234F1Z0', status: 'Approved', joined: '2026-05-11' },
+    { id: 1, company: 'Acme Supplies Ltd', contact: 'John Doe', email: 'vendor@vyaparsetu.com', phone: '+91 98765 43210', gst: '27ABCDE1234F1Z0', status: 'Approved', joined: '2026-05-11' },
     { id: 2, company: 'Global Parts Co.', contact: 'Alice Smith', email: 'globalparts@corp.com', phone: '+1 (555) 345-6789', gst: '07GHIJK5678L2Z3', status: 'Pending', joined: '2026-06-02' },
     { id: 3, company: 'SteelCorp Industries', contact: 'Marc Vande', email: 'steelcorp@industries.com', phone: '+91 87654 32109', gst: '08MNOPQ9012R3Z4', status: 'Approved', joined: '2026-05-25' },
     { id: 4, company: 'TechSystems Solutions', contact: 'David Lee', email: 'techsystems@solutions.com', phone: '+91 76543 21098', gst: '19STUVW3456X4Z5', status: 'Deactivated', joined: '2026-05-18' }
   ])
 
   const [rfqs, setRfqs] = useState([
-    { id: 'RFQ-2026-001', title: 'Supply of 500 Tons Structural Steel', creator: 'officer@vendorbridge.com', bidsCount: 3, status: 'Open', date: '2026-06-01' },
-    { id: 'RFQ-2026-002', title: 'Procurement of High-Grade Brass Valves', creator: 'officer2@vendorbridge.com', bidsCount: 5, status: 'Closed', date: '2026-05-28' },
-    { id: 'RFQ-2026-003', title: 'IT Equipment & Workspace Upgrade', creator: 'officer@vendorbridge.com', bidsCount: 2, status: 'Under Review', date: '2026-06-04' }
+    { id: 'RFQ-2026-001', title: 'Supply of 500 Tons Structural Steel', creator: 'officer@vyaparsetu.com', bidsCount: 3, status: 'Open', date: '2026-06-01' },
+    { id: 'RFQ-2026-002', title: 'Procurement of High-Grade Brass Valves', creator: 'officer2@vyaparsetu.com', bidsCount: 5, status: 'Closed', date: '2026-05-28' },
+    { id: 'RFQ-2026-003', title: 'IT Equipment & Workspace Upgrade', creator: 'officer@vyaparsetu.com', bidsCount: 2, status: 'Under Review', date: '2026-06-04' }
   ])
 
   const [bids, setBids] = useState([
@@ -52,7 +52,7 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
   ])
 
   const [pos, setPos] = useState([
-    { id: 'PO-2026-01', rfqRef: 'RFQ-2026-002', vendor: 'Acme Supplies Ltd', amount: 42500, approver: 'manager@vendorbridge.com', status: 'Approved', date: '2026-05-30' },
+    { id: 'PO-2026-01', rfqRef: 'RFQ-2026-002', vendor: 'Acme Supplies Ltd', amount: 42500, approver: 'manager@vyaparsetu.com', status: 'Approved', date: '2026-05-30' },
     { id: 'PO-2026-02', rfqRef: 'RFQ-2026-001', vendor: 'Global Parts Co.', amount: 138000, approver: 'Pending Manager', status: 'Pending Approval', date: '2026-06-04' }
   ])
 
@@ -62,7 +62,7 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
   ])
 
   const [logs, setLogs] = useState([
-    { id: 1, timestamp: '2026-06-06 11:32:05', actor: 'admin@vendorbridge.com', action: 'Created Manager Account: manager2@vendorbridge.com', severity: 'Info' },
+    { id: 1, timestamp: '2026-06-06 11:32:05', actor: 'admin@vyaparsetu.com', action: 'Created Manager Account: manager2@vyaparsetu.com', severity: 'Info' },
     { id: 2, timestamp: '2026-06-06 10:15:22', actor: 'globalparts@corp.com', action: 'Submitted Bid-102 for RFQ-2026-001 ($138,000)', severity: 'Info' },
     { id: 3, timestamp: '2026-06-06 09:44:10', actor: 'SYSTEM', action: 'Database pool connection threshold exceeded 80%', severity: 'Warning' },
     { id: 4, timestamp: '2026-06-06 08:30:15', actor: 'SYSTEM', action: 'Failed sign-in attempt from IP: 192.168.1.104', severity: 'Warning' },
@@ -86,7 +86,7 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
         const newLog = {
           id: Date.now(),
           timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
-          actor: 'admin@vendorbridge.com',
+          actor: 'admin@vyaparsetu.com',
           action: `${nextStatus === 'Active' ? 'Activated' : 'Deactivated'} User Account: ${user.email}`,
           severity: nextStatus === 'Active' ? 'Info' : 'Warning'
         }
@@ -117,7 +117,7 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
     const newLog = {
       id: Date.now(),
       timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
-      actor: 'admin@vendorbridge.com',
+      actor: 'admin@vyaparsetu.com',
       action: `Created ${newUserRole === 'manager' ? 'Manager' : 'Procurement Officer'} Account: ${newUserEmail}`,
       severity: 'Info'
     }
@@ -140,7 +140,7 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
         const newLog = {
           id: Date.now(),
           timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
-          actor: 'admin@vendorbridge.com',
+          actor: 'admin@vyaparsetu.com',
           action: `Set vendor status of ${vendor.company} to ${newStatus}`,
           severity: newStatus === 'Approved' ? 'Info' : 'Warning'
         }
@@ -806,7 +806,7 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
                 <input 
                   type="email" 
                   id="modalEmail" 
-                  placeholder="name@vendorbridge.com" 
+                  placeholder="name@vyaparsetu.com" 
                   value={newUserEmail}
                   onChange={(e) => setNewUserEmail(e.target.value)}
                   required 
