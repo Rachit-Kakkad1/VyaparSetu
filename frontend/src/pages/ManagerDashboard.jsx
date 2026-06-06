@@ -296,7 +296,7 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
   })
 
   // Profile management
-  const [managerProfile, setManagerProfile] = useState({ name: 'Sarah Jenkins', email: 'manager@vendorbridge.com', phone: '+91 98765 00001' })
+  const [managerProfile, setManagerProfile] = useState({ name: 'Sarah Jenkins', email: 'manager@vyaparsetu.com', phone: '+91 98765 00001' })
   const [showProfileModal, setShowProfileModal] = useState(false)
 
   // Notifications
