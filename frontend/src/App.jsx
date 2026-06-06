@@ -19,22 +19,53 @@ function App() {
     }
   }, [darkMode])
 
+  // Restore session from localStorage on component mount
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken')
+    const userStr = localStorage.getItem('user')
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr)
+        const role = user.role?.name
+        if (role === 'ADMIN') {
+          setCurrentPage('admin-dashboard')
+        } else if (role === 'MANAGER') {
+          setCurrentPage('manager-dashboard')
+        } else if (role === 'PROCUREMENT_OFFICER') {
+          setCurrentPage('officer-dashboard')
+        } else if (role === 'VENDOR') {
+          setCurrentPage('vendor-dashboard')
+        }
+      } catch (e) {
+        console.error('Error parsing stored user session:', e)
+      }
+    }
+  }, [])
+
   const toggleDarkMode = () => {
     setDarkMode(!darkMode)
+  }
+
+  const handleNavigate = (page) => {
+    if (page === 'landing') {
+      localStorage.removeItem('accessToken')
+      localStorage.removeItem('user')
+    }
+    setCurrentPage(page)
   }
 
   const renderPage = () => {
     switch (currentPage) {
       case 'login':
-        return <LoginPage onNavigate={setCurrentPage} />
+        return <LoginPage onNavigate={handleNavigate} />
       case 'signup':
-        return <SignUpPage onNavigate={setCurrentPage} />
+        return <SignUpPage onNavigate={handleNavigate} />
       case 'admin-dashboard':
         return (
           <AdminDashboard
             darkMode={darkMode}
             toggleDarkMode={toggleDarkMode}
-            onNavigate={setCurrentPage}
+            onNavigate={handleNavigate}
           />
         )
       case 'manager-dashboard':
@@ -42,7 +73,7 @@ function App() {
           <ManagerDashboard
             darkMode={darkMode}
             toggleDarkMode={toggleDarkMode}
-            onNavigate={setCurrentPage}
+            onNavigate={handleNavigate}
           />
         )
       case 'officer-dashboard':
@@ -50,7 +81,7 @@ function App() {
           <OfficerDashboard
             darkMode={darkMode}
             toggleDarkMode={toggleDarkMode}
-            onNavigate={setCurrentPage}
+            onNavigate={handleNavigate}
           />
         )
       case 'vendor-dashboard':
@@ -58,11 +89,11 @@ function App() {
           <VendorDashboard
             darkMode={darkMode}
             toggleDarkMode={toggleDarkMode}
-            onNavigate={setCurrentPage}
+            onNavigate={handleNavigate}
           />
         )
       default:
-        return <LandingPage darkMode={darkMode} toggleDarkMode={toggleDarkMode} onNavigate={setCurrentPage} />
+        return <LandingPage darkMode={darkMode} toggleDarkMode={toggleDarkMode} onNavigate={handleNavigate} />
     }
   }
 
