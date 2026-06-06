@@ -177,46 +177,127 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
           {activeTab === 'overview' && (
             <div className="tab-pane-fade">
               <section className="stats-kpi-grid">
-                <div className="kpi-card">
-                  <div className="kpi-header"><span className="kpi-title">Global Accounts</span><Users size={16} /></div>
+                <div className="kpi-card kpi-accounts">
+                  <div className="kpi-header">
+                    <span className="kpi-title">Global Accounts</span>
+                    <div className="kpi-icon-badge"><Users size={16} /></div>
+                  </div>
                   <span className="kpi-value">{users.length}</span>
+                  <div className="kpi-footer-status">
+                    <span className="footer-trend-up">Total Registered</span>
+                  </div>
                 </div>
-                <div className="kpi-card">
-                  <div className="kpi-header"><span className="kpi-title">Verified Vendors</span><UserCheck size={16} /></div>
+                <div className="kpi-card kpi-vendors">
+                  <div className="kpi-header">
+                    <span className="kpi-title">Verified Vendors</span>
+                    <div className="kpi-icon-badge"><UserCheck size={16} /></div>
+                  </div>
                   <span className="kpi-value">{vendors.filter(v => v.status === 'APPROVED').length}</span>
+                  <div className="kpi-footer-status">
+                    <span className="footer-trend-up">Active & Onboarded</span>
+                  </div>
                 </div>
-                <div className="kpi-card">
-                  <div className="kpi-header"><span className="kpi-title">Active RFQs</span><Package size={16} /></div>
+                <div className="kpi-card kpi-rfqs">
+                  <div className="kpi-header">
+                    <span className="kpi-title">Active RFQs</span>
+                    <div className="kpi-icon-badge"><Package size={16} /></div>
+                  </div>
                   <span className="kpi-value">{rfqs.filter(r => r.status === 'PUBLISHED').length}</span>
+                  <div className="kpi-footer-status">
+                    <span className="footer-trend-up">Bidding Open</span>
+                  </div>
                 </div>
-                <div className="kpi-card">
-                  <div className="kpi-header"><span className="kpi-title">Pending POs</span><DollarSign size={16} /></div>
+                <div className="kpi-card kpi-pos">
+                  <div className="kpi-header">
+                    <span className="kpi-title">Pending POs</span>
+                    <div className="kpi-icon-badge"><DollarSign size={16} /></div>
+                  </div>
                   <span className="kpi-value">{pos.filter(p => p.status === 'ISSUED').length}</span>
+                  <div className="kpi-footer-status">
+                    <span className="footer-trend-up">Awaiting Fulfillment</span>
+                  </div>
                 </div>
               </section>
 
               <div className="analytics-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', marginTop: '30px' }}>
-                <div className="analytics-card">
+                <div className="analytics-card activity-analytics-card">
                   <h3>Recent System Activity</h3>
-                  <div className="logs-ledger-container" style={{ maxHeight: '400px' }}>
-                    {logs.slice(0, 10).map(log => (
-                      <div key={log.id} className="log-entry-item">
-                        <Activity size={14} />
+                  <div className="logs-ledger-container timeline-mode" style={{ maxHeight: '400px' }}>
+                    {logs.slice(0, 10).map((log, index) => (
+                      <div key={log.id || index} className="log-entry-item styled-feed-item">
+                        <div className="log-icon-timeline-wrapper">
+                          <div className="log-timeline-line"></div>
+                          <div className="log-badge-marker severity-info animate-marker">
+                            <Activity size={14} />
+                          </div>
+                        </div>
                         <div className="log-body-content">
-                            <div><strong>{log.user?.email || 'SYSTEM'}</strong>: {log.action}</div>
+                            <div className="log-action-msg">
+                              <strong className="log-user-email">{log.user?.email || 'SYSTEM'}</strong>
+                              <span className="log-action-bubble">{log.action}</span>
+                            </div>
+                            {log.description && <div className="log-description-text">{log.description}</div>}
                             <div className="log-time-stamp">{new Date(log.createdAt).toLocaleString()}</div>
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
-                <div className="analytics-card">
+                <div className="analytics-card infra-analytics-card">
                     <h3>Infrastructure</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        <div className="infra-stat"><span>PostgreSQL Status</span><span className="status-badge status-active">Online</span></div>
-                        <div className="infra-stat"><span>Supabase Sync</span><span className="status-badge status-active">Connected</span></div>
-                        <div className="infra-stat"><span>Cloudinary API</span><span className="status-badge status-active">Active</span></div>
-                        <div className="infra-stat"><span>SMTP Relay</span><span className="status-badge status-active">Online</span></div>
+                    <div className="infra-stats-list" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        <div className="infra-stat-item">
+                            <div className="infra-icon-wrapper db-infra">
+                                <Database size={16} />
+                            </div>
+                            <div className="infra-details">
+                                <span className="infra-name">PostgreSQL Status</span>
+                                <span className="infra-desc">Database Instance</span>
+                            </div>
+                            <div className="infra-status">
+                                <span className="status-dot-glowing green"></span>
+                                <span className="status-badge status-active">Online</span>
+                            </div>
+                        </div>
+                        <div className="infra-stat-item">
+                            <div className="infra-icon-wrapper sync-infra">
+                                <RefreshCw size={16} />
+                            </div>
+                            <div className="infra-details">
+                                <span className="infra-name">Supabase Sync</span>
+                                <span className="infra-desc">Real-time Data Layer</span>
+                            </div>
+                            <div className="infra-status">
+                                <span className="status-dot-glowing green"></span>
+                                <span className="status-badge status-active">Connected</span>
+                            </div>
+                        </div>
+                        <div className="infra-stat-item">
+                            <div className="infra-icon-wrapper cloud-infra">
+                                <Cpu size={16} />
+                            </div>
+                            <div className="infra-details">
+                                <span className="infra-name">Cloudinary API</span>
+                                <span className="infra-desc">Asset & Storage Service</span>
+                            </div>
+                            <div className="infra-status">
+                                <span className="status-dot-glowing green"></span>
+                                <span className="status-badge status-active">Active</span>
+                            </div>
+                        </div>
+                        <div className="infra-stat-item">
+                            <div className="infra-icon-wrapper mail-infra">
+                                <Shield size={16} />
+                            </div>
+                            <div className="infra-details">
+                                <span className="infra-name">SMTP Relay</span>
+                                <span className="infra-desc">Email Engine</span>
+                            </div>
+                            <div className="infra-status">
+                                <span className="status-dot-glowing green"></span>
+                                <span className="status-badge status-active">Online</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
               </div>

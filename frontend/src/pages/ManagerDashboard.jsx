@@ -1193,7 +1193,7 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
                               <span style={{ fontSize: '0.7rem', padding: '2px 6px', borderRadius: '4px', background: 'var(--l-border)', color: 'var(--l-text-mute)' }}>{s.status}</span>
                             </div>
                             <div style={{ fontSize: '0.75rem', color: 'var(--l-text-mute)', marginTop: '4px' }}>
-                              {s.originAddress.split(',')[0]} &rarr; {s.destinationAddress.split(',')[0]}
+                              {s.originAddress ? s.originAddress.split(',')[0] : `Loc (${s.originLat?.toFixed(2)}, ${s.originLng?.toFixed(2)})`} &rarr; {s.destinationAddress ? s.destinationAddress.split(',')[0] : `Loc (${s.destinationLat?.toFixed(2)}, ${s.destinationLng?.toFixed(2)})`}
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px', fontSize: '0.7rem' }}>
                               <span style={{ color: 'var(--l-cyan)' }}>Progress: {s.progressPercentage}%</span>
