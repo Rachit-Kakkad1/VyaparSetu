@@ -295,24 +295,127 @@ function AdminDashboard({ darkMode, toggleDarkMode, onNavigate }) {
               <div className="pipeline-sub-nav">
                 <button className={`sub-nav-item ${pipelineSubTab === 'rfqs' ? 'active' : ''}`} onClick={() => setPipelineSubTab('rfqs')}>RFQs</button>
                 <button className={`sub-nav-item ${pipelineSubTab === 'bids' ? 'active' : ''}`} onClick={() => setPipelineSubTab('bids')}>Quotations</button>
-                <button className={`sub-nav-item ${pipelineSubTab === 'pos' ? 'active' : ''}`} onClick={() => setPipelineSubTab('pos')}>POs</button>
+                <button className={`sub-nav-item ${pipelineSubTab === 'pos' ? 'active' : ''}`} onClick={() => setPipelineSubTab('pos')}>Purchase Orders</button>
                 <button className={`sub-nav-item ${pipelineSubTab === 'invoices' ? 'active' : ''}`} onClick={() => setPipelineSubTab('invoices')}>Invoices</button>
               </div>
               
               <div className="dashboard-table-container">
                 <table className="dashboard-table">
-                    <thead>
-                        {pipelineSubTab === 'rfqs' && <tr><th>RFQ #</th><th>Title</th><th>Deadline</th><th>Status</th></tr>}
-                        {pipelineSubTab === 'bids' && <tr><th>Quotation ID</th><th>Vendor</th><th>Amount</th><th>Status</th></tr>}
-                        {pipelineSubTab === 'pos' && <tr><th>PO #</th><th>Vendor</th><th>Total</th><th>Status</th></tr>}
-                        {pipelineSubTab === 'invoices' && <tr><th>Invoice #</th><th>Vendor</th><th>Grand Total</th><th>Status</th></tr>}
-                    </thead>
-                  <tbody>
-                    {pipelineSubTab === 'rfqs' && rfqs.map(r => <tr key={r.id}><td><code>{r.rfqNumber}</code></td><td>{r.title}</td><td>{new Date(r.deadline).toLocaleDateString()}</td><td>{r.status}</td></tr>)}
-                    {pipelineSubTab === 'bids' && bids.map(b => <tr key={b.id}><td><code>{b.id.substring(0,8)}</code></td><td>{b.vendor?.companyName}</td><td>${parseFloat(b.totalAmount).toLocaleString()}</td><td>{b.status}</td></tr>)}
-                    {pipelineSubTab === 'pos' && pos.map(p => <tr key={p.id}><td><code>{p.poNumber}</code></td><td>{p.vendor?.companyName}</td><td>${parseFloat(p.totalAmount).toLocaleString()}</td><td>{p.status}</td></tr>)}
-                    {pipelineSubTab === 'invoices' && invoices.map(i => <tr key={i.id}><td><code>{i.invoiceNumber}</code></td><td>{i.vendor?.companyName}</td><td>${parseFloat(i.grandTotal).toLocaleString()}</td><td>{i.status}</td></tr>)}
-                  </tbody>
+                  {pipelineSubTab === 'rfqs' && (
+                    <>
+                      <thead>
+                        <tr>
+                          <th>RFQ Number</th>
+                          <th>Project Name / Title</th>
+                          <th>Status</th>
+                          <th>Deadline</th>
+                          <th>Creation Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rfqs.map(r => (
+                          <tr key={r.id}>
+                            <td><code>{r.rfqNumber}</code></td>
+                            <td><strong>{r.title}</strong></td>
+                            <td>
+                              <span className={`pipeline-stage-badge stage-${r.status?.toLowerCase()}`}>
+                                {r.status}
+                              </span>
+                            </td>
+                            <td>{new Date(r.deadline).toLocaleDateString()}</td>
+                            <td>{new Date(r.createdAt).toLocaleDateString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </>
+                  )}
+
+                  {pipelineSubTab === 'bids' && (
+                    <>
+                      <thead>
+                        <tr>
+                          <th>Quotation ID</th>
+                          <th>Vendor</th>
+                          <th>Amount</th>
+                          <th>Delivery</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {bids.map(b => (
+                          <tr key={b.id}>
+                            <td><code>{b.id.substring(0, 8)}</code></td>
+                            <td><strong>{b.vendor?.companyName}</strong></td>
+                            <td><strong>${parseFloat(b.totalAmount).toLocaleString()}</strong></td>
+                            <td>{b.deliveryTimeDays} Days</td>
+                            <td>
+                              <span className={`bid-status-badge status-${b.status?.toLowerCase()}`}>
+                                {b.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </>
+                  )}
+
+                  {pipelineSubTab === 'pos' && (
+                    <>
+                      <thead>
+                        <tr>
+                          <th>PO Number</th>
+                          <th>Vendor Partner</th>
+                          <th>PO Total</th>
+                          <th>Status</th>
+                          <th>Release Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pos.map(p => (
+                          <tr key={p.id}>
+                            <td><code>{p.poNumber}</code></td>
+                            <td><strong>{p.vendor?.companyName}</strong></td>
+                            <td><strong>${parseFloat(p.totalAmount).toLocaleString()}</strong></td>
+                            <td>
+                              <span className={`po-status-badge status-${p.status?.toLowerCase()}`}>
+                                {p.status}
+                              </span>
+                            </td>
+                            <td>{new Date(p.createdAt).toLocaleDateString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </>
+                  )}
+
+                  {pipelineSubTab === 'invoices' && (
+                    <>
+                      <thead>
+                        <tr>
+                          <th>Invoice Number</th>
+                          <th>Supplier Partner</th>
+                          <th>Grand Total</th>
+                          <th>Status</th>
+                          <th>Filing Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {invoices.map(i => (
+                          <tr key={i.id}>
+                            <td><code>{i.invoiceNumber}</code></td>
+                            <td><strong>{i.vendor?.companyName}</strong></td>
+                            <td><strong>${parseFloat(i.grandTotal).toLocaleString()}</strong></td>
+                            <td>
+                              <span className={`invoice-status-badge status-${i.status?.toLowerCase()}`}>
+                                {i.status}
+                              </span>
+                            </td>
+                            <td>{new Date(i.createdAt).toLocaleDateString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </>
+                  )}
                 </table>
               </div>
             </div>

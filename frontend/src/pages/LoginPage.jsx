@@ -75,8 +75,10 @@ function LoginPage({ onNavigate }) {
         const role = data.data.user.role.name
         if (role === 'ADMIN') {
           onNavigate('admin-dashboard')
-        } else if (role === 'MANAGER' || role === 'PROCUREMENT_OFFICER') {
+        } else if (role === 'MANAGER') {
           onNavigate('manager-dashboard')
+        } else if (role === 'PROCUREMENT_OFFICER') {
+          onNavigate('officer-dashboard')
         } else if (role === 'VENDOR') {
           onNavigate('landing') // or vendor dashboard if exists
         } else {

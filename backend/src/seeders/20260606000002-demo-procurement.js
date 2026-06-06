@@ -3,13 +3,15 @@ const { v4: uuidv4 } = require('uuid');
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     const users = await queryInterface.sequelize.query('SELECT id, email FROM users;');
-    const roles = await queryInterface.sequelize.query('SELECT id, name FROM roles;');
     const userRows = users[0];
-    const roleRows = roles[0];
 
     const admin = userRows.find(u => u.email === 'admin@vyaparsetu.com');
-    const officer = userRows.find(u => u.email === 'officer@vyaparsetu.com');
+    const officer = userRows.find(u => u.email === 'procurement@vyaparsetu.com');
     const vendorUser = userRows.find(u => u.email === 'vendor@vyaparsetu.com');
+
+    if (!admin || !officer || !vendorUser) {
+        throw new Error('Required seed users not found. Check demo-users seeder.');
+    }
 
     // 1. Create a Vendor
     const vendorId = uuidv4();
@@ -132,7 +134,7 @@ module.exports = {
     }]);
   },
 
-  down: async (queryInterface, Sequelize) => {
+  down: async (queryInterface) => {
     await queryInterface.bulkDelete('shipments', null, {});
     await queryInterface.bulkDelete('purchase_orders', null, {});
     await queryInterface.bulkDelete('quotation_items', null, {});

@@ -917,27 +917,27 @@ function ManagerDashboard({ darkMode, toggleDarkMode, onNavigate }) {
                     <table className="dashboard-table">
                       <thead>
                         <tr>
-                          <th>RFQ Reference</th>
+                          <th>Document ID</th>
                           <th>Project / Title</th>
                           <th>Selected Vendor</th>
-                          <th>Resolution Status</th>
-                          <th>Remarks</th>
+                          <th>Decision</th>
+                          <th>Approval Remarks</th>
                           <th>Date</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {decidedRequests.map((req, index) => (
-                          <tr key={index}>
-                            <td><code>{req.id}</code></td>
-                            <td><strong>{req.title}</strong></td>
-                            <td>{req.vendor || 'N/A'}</td>
+                        {decidedRequests.map(item => (
+                          <tr key={item.id}>
+                            <td><code>{item.rfqNumber || item.id.substring(0, 8)}</code></td>
+                            <td><strong>{item.title}</strong></td>
+                            <td>{item.vendor?.companyName || item.vendor || 'N/A'}</td>
                             <td>
-                              <span className={`role-badge-label`} style={{ background: req.decision === 'Approved' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)', color: req.decision === 'Approved' ? 'var(--success-color)' : 'var(--error-color)' }}>
-                                {req.decision.toUpperCase()}
+                              <span className={`decision-badge badge-${(item.status || item.decision || '').toLowerCase()}`}>
+                                {item.status || item.decision}
                               </span>
                             </td>
-                            <td><span style={{ fontStyle: 'italic' }}>"{req.remarks}"</span></td>
-                            <td>{req.date}</td>
+                            <td style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{item.remarks || 'No remarks provided.'}</td>
+                            <td>{new Date(item.updatedAt || item.date).toLocaleDateString()}</td>
                           </tr>
                         ))}
                       </tbody>
