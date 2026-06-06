@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚡ VendorBridge
+# ⚡ VyaparSetu
 
 ### *Kill the spreadsheet. Own the supply chain.*
 
@@ -34,11 +34,11 @@ Most procurement in Indian SMEs and enterprises still runs on WhatsApp forwards,
 - 🕐 **Manual bottlenecks** — POs taking days to generate instead of seconds.
 - 💸 **No spend visibility** — Finance teams flying blind.
 
-**VendorBridge** digitizes the *entire* procurement lifecycle on a single platform — structured, secure, and automated from the first RFQ to the final paid invoice.
+**VyaparSetu** digitizes the *entire* procurement lifecycle on a single platform — structured, secure, and automated from the first RFQ to the final paid invoice.
 
 ---
 
-## ✨ What VendorBridge Does
+## ✨ What VyaparSetu Does
 
 > One platform. Eight modules. Zero manual errors.
 
@@ -392,7 +392,7 @@ Please follow [Conventional Commits](https://www.conventionalcommits.org/) for c
 
 ## 📄 License
 
-MIT © 2026 VendorBridge Team
+MIT © 2026 VyaparSetu Team
 
 ---
 
