@@ -18,7 +18,7 @@ import {
   ArrowRight
 } from 'lucide-react'
 
-function LandingPage({ darkMode, toggleDarkMode }) {
+function LandingPage({ darkMode, toggleDarkMode, onNavigate }) {
   // Live bid mockup interactive state
   const [selectedBidIndex, setSelectedBidIndex] = useState(0)
 
@@ -156,8 +156,8 @@ function LandingPage({ darkMode, toggleDarkMode }) {
             <button className="theme-toggle" onClick={toggleDarkMode} aria-label="Toggle Theme">
               {darkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-            <button className="btn btn-secondary">Sign In</button>
-            <button className="btn btn-primary">Register</button>
+            <button className="btn btn-secondary" onClick={() => onNavigate('login')}>Sign In</button>
+            <button className="btn btn-primary" onClick={() => onNavigate('signup')}>Register</button>
           </div>
         </div>
       </header>
@@ -485,7 +485,7 @@ function LandingPage({ darkMode, toggleDarkMode }) {
             Stop relying on scattered email threads and manual Excel spreadsheets. Launch VendorBridge and establish transparency, auditability, and speed.
           </p>
           <div style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
-            <button className="btn btn-primary" style={{ backgroundColor: 'var(--bg-color)', color: 'var(--text-color)' }}>
+            <button className="btn btn-primary" style={{ backgroundColor: 'var(--bg-color)', color: 'var(--text-color)' }} onClick={() => onNavigate('signup')}>
               Get Started for Free
             </button>
             <button className="btn btn-secondary">Contact Sales</button>
